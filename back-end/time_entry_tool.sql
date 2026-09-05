@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 29, 2026 at 01:37 PM
+-- Generation Time: Sep 05, 2026 at 05:58 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `hhvtt_timetrack_test`
+-- Database: `time_entry_tool`
 --
 
 -- --------------------------------------------------------
@@ -155,6 +155,7 @@ CREATE TABLE `employees` (
   `employee_name` varchar(255) NOT NULL,
   `department_id` int(11) NOT NULL,
   `designation` varchar(100) NOT NULL,
+  `role` enum('Supervisor','Employee') DEFAULT 'Employee',
   `status` enum('Active','Inactive') DEFAULT 'Active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -164,53 +165,53 @@ CREATE TABLE `employees` (
 -- Dumping data for table `employees`
 --
 
-INSERT INTO `employees` (`id`, `employee_id`, `employee_name`, `department_id`, `designation`, `status`, `created_at`, `updated_at`) VALUES
-(6, '6191', 'NAGARAJU G L', 4, 'FITTER', 'Active', '2026-08-21 11:13:31', '2026-08-21 11:13:51'),
-(7, '6207', 'MRUTHUNJAYA J', 4, 'ELECTRICIAN', 'Active', '2026-08-21 11:15:15', '2026-08-21 11:15:15'),
-(8, '6152', 'HANUMANTHARAJU B C', 4, 'FITTER', 'Active', '2026-08-21 11:15:57', '2026-08-21 11:15:57'),
-(9, '6104', 'CHANDRASHEKAR H S', 4, 'ELECTRICIAN', 'Active', '2026-08-21 11:16:30', '2026-08-21 11:21:01'),
-(10, '6224', 'SHARANNAPA', 4, 'TURNING OPERATOR', 'Active', '2026-08-21 11:17:06', '2026-08-21 11:17:06'),
-(11, '6155', 'LOKESH K V', 4, 'FITTER', 'Active', '2026-08-21 11:17:42', '2026-08-21 11:17:42'),
-(12, '6366', 'LOHITH KUMAR K T', 4, 'ELECTRICIAN', 'Active', '2026-08-21 11:18:54', '2026-08-21 11:20:52'),
-(13, '6384', 'SREENIVASA T', 4, 'FITTER', 'Active', '2026-08-21 11:19:26', '2026-08-21 11:19:26'),
-(14, '6385', 'RAYAKATTRA NANDESHWARA', 4, 'FITTER', 'Active', '2026-08-21 11:20:01', '2026-08-21 11:20:01'),
-(15, '6398', 'NIRAJ SINGH', 4, 'TIG WELDER', 'Active', '2026-08-21 11:20:29', '2026-08-21 11:20:29'),
-(16, '6412', 'UMESHA', 4, 'FITTER', 'Active', '2026-08-21 11:21:34', '2026-08-21 11:21:34'),
-(17, '6414', 'CHANDRA MONDI', 4, 'FITTER', 'Active', '2026-08-21 11:23:20', '2026-08-21 11:23:20'),
-(18, '6255', 'SANTHOSH KUMAR MALLIK', 4, 'FITTER', 'Active', '2026-08-21 11:24:10', '2026-08-21 11:24:10'),
-(19, 'HTT00132', 'SHRIDHARA M', 4, 'TECHNICAL ASSISTANT', 'Active', '2026-08-21 11:31:41', '2026-08-21 11:31:41'),
-(20, '6421', 'BASAVARAJU R', 4, 'FITTER', 'Active', '2026-08-21 11:32:23', '2026-08-21 11:32:23'),
-(21, 'HTT00130', 'NIKHIL', 4, 'Engineer', 'Active', '2026-08-21 11:32:24', '2026-08-21 11:32:24'),
-(22, 'HTT00120', 'RATHIN KUMAR T M', 4, 'Engineer', 'Active', '2026-08-21 11:32:57', '2026-08-21 11:32:57'),
-(23, '6435', 'DAYANANDA S G', 4, 'FITTER', 'Active', '2026-08-21 11:33:31', '2026-08-21 11:33:31'),
-(24, 'HTT00113', 'RAKSHITH S SALIAN', 4, 'Engineer', 'Active', '2026-08-21 11:33:32', '2026-08-21 11:33:32'),
-(25, 'HTT00045', 'Sanganna Choudri', 4, 'SHIFT SUPERVISOR', 'Active', '2026-08-21 11:34:03', '2026-08-21 11:34:03'),
-(26, '6438', 'SANJUKUMAR D PUJAR', 4, 'FITTER', 'Active', '2026-08-21 11:34:09', '2026-08-21 11:34:09'),
-(27, '6143', 'THIPPESWAMY N J', 4, 'HELPER', 'Active', '2026-08-21 11:34:30', '2026-08-21 11:34:30'),
-(28, 'HTT00042', 'UPENDRA V APSANGI', 4, 'MANAGER', 'Active', '2026-08-21 11:34:31', '2026-08-21 11:34:31'),
-(29, '6154', 'MUNIRAJU M R', 4, 'FITTER', 'Active', '2026-08-21 11:34:55', '2026-08-21 11:34:55'),
-(30, 'HTT00034', 'ANBU SADARACH A', 4, 'SHIFT SUPERVISOR', 'Active', '2026-08-21 11:34:57', '2026-08-21 11:34:57'),
-(31, '6156', 'MANJUNATH', 4, 'FITTER', 'Active', '2026-08-21 11:35:21', '2026-08-21 11:35:21'),
-(32, 'HTT00027', 'G SIDDAPPA', 4, 'ASSISTANT MANAGER', 'Active', '2026-08-21 11:35:27', '2026-08-21 11:35:27'),
-(33, '6423', 'SATHISH G', 4, 'FITTER', 'Active', '2026-08-21 11:35:43', '2026-08-21 11:35:43'),
-(34, 'HTT00023', 'AMANULLA', 4, 'FITTER', 'Active', '2026-08-21 11:35:53', '2026-08-21 11:35:53'),
-(35, '6443', 'DHANANJAYA N', 4, 'FITTER', 'Active', '2026-08-21 11:36:08', '2026-08-21 11:36:08'),
-(36, 'HTT00020', 'MURALIDHAR S K', 4, 'SUPERVISOR', 'Active', '2026-08-21 11:36:15', '2026-08-21 11:36:15'),
-(37, '6446', 'MANOJ UMESH JOGALEKAR', 4, 'FITTER', 'Active', '2026-08-21 11:36:33', '2026-08-21 11:36:33'),
-(38, 'HTT00015', 'M R SHAKTHI PRATHAP', 4, 'ASSISTANT MANAGER', 'Active', '2026-08-21 11:36:46', '2026-08-21 11:36:46'),
-(39, '6447', 'LAKSHMIKANTH CHANDRASHEKAR GOUDA', 4, 'FITTER', 'Active', '2026-08-21 11:36:58', '2026-08-21 11:36:58'),
-(40, 'HTT00014', 'T S MURALI', 4, 'TECHNICIAN', 'Active', '2026-08-21 11:37:13', '2026-08-21 11:37:13'),
-(41, '6455', 'RAGHAVENDRA BOMMAGOUDA', 4, 'FITTER', 'Active', '2026-08-21 11:37:24', '2026-08-21 11:37:24'),
-(42, 'HTT00012', 'ASHOK F GANJIGATTI', 4, 'ASSISTANT MANAGER', 'Active', '2026-08-21 11:37:55', '2026-08-21 11:37:55'),
-(43, '6456', 'GANESH HULIYAPPA GOUDA', 4, 'FITTER', 'Active', '2026-08-21 11:37:57', '2026-08-21 11:37:57'),
-(44, '6458', 'PUTTARAJA NAIK V', 4, 'ELECTRICIAN', 'Active', '2026-08-21 11:38:19', '2026-08-21 11:42:20'),
-(45, 'HTT00010', 'RAMESH K', 4, 'FITTER', 'Active', '2026-08-21 11:38:37', '2026-08-21 11:38:37'),
-(46, '6462', 'BOGESH', 4, 'HELPER', 'Active', '2026-08-21 11:38:55', '2026-08-21 11:38:55'),
-(47, 'HTT00007', 'G SREERAMULU NAIDU', 4, 'ASSISTANT MANAGER', 'Active', '2026-08-21 11:39:03', '2026-08-21 11:39:03'),
-(48, '6459', 'THIPPESHA H', 4, 'ELECTRICIAN', 'Active', '2026-08-21 11:39:24', '2026-08-21 11:42:07'),
-(49, '6419', 'MANOJ B.D', 4, 'ELECTRICIAN', 'Active', '2026-08-21 11:39:35', '2026-08-21 11:41:51'),
-(50, '6176', 'YATHISH CS', 4, 'FITTER', 'Active', '2026-08-21 11:39:55', '2026-08-21 11:39:55'),
-(51, '6139', 'DEVARAJ E', 4, 'ELECTRICIAN', 'Active', '2026-08-21 11:40:08', '2026-08-21 11:41:21');
+INSERT INTO `employees` (`id`, `employee_id`, `employee_name`, `department_id`, `designation`, `role`, `status`, `created_at`, `updated_at`) VALUES
+(6, '6191', 'NAGARAJU G L', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:13:31', '2026-08-21 11:13:51'),
+(7, '6207', 'MRUTHUNJAYA J', 4, 'ELECTRICIAN', 'Employee', 'Active', '2026-08-21 11:15:15', '2026-08-21 11:15:15'),
+(8, '6152', 'HANUMANTHARAJU B C', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:15:57', '2026-08-21 11:15:57'),
+(9, '6104', 'CHANDRASHEKAR H S', 4, 'ELECTRICIAN', 'Employee', 'Active', '2026-08-21 11:16:30', '2026-08-21 11:21:01'),
+(10, '6224', 'SHARANNAPA', 4, 'TURNING OPERATOR', 'Employee', 'Active', '2026-08-21 11:17:06', '2026-08-21 11:17:06'),
+(11, '6155', 'LOKESH K V', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:17:42', '2026-08-21 11:17:42'),
+(12, '6366', 'LOHITH KUMAR K T', 4, 'ELECTRICIAN', 'Employee', 'Active', '2026-08-21 11:18:54', '2026-08-21 11:20:52'),
+(13, '6384', 'SREENIVASA T', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:19:26', '2026-08-21 11:19:26'),
+(14, '6385', 'RAYAKATTRA NANDESHWARA', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:20:01', '2026-08-21 11:20:01'),
+(15, '6398', 'NIRAJ SINGH', 4, 'TIG WELDER', 'Employee', 'Active', '2026-08-21 11:20:29', '2026-08-21 11:20:29'),
+(16, '6412', 'UMESHA', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:21:34', '2026-08-21 11:21:34'),
+(17, '6414', 'CHANDRA MONDI', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:23:20', '2026-08-21 11:23:20'),
+(18, '6255', 'SANTHOSH KUMAR MALLIK', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:24:10', '2026-08-21 11:24:10'),
+(19, 'HTT00132', 'SHRIDHARA M', 4, 'TECHNICAL ASSISTANT', 'Employee', 'Active', '2026-08-21 11:31:41', '2026-08-21 11:31:41'),
+(20, '6421', 'BASAVARAJU R', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:32:23', '2026-08-21 11:32:23'),
+(21, 'HTT00130', 'NIKHIL', 4, 'Engineer', 'Supervisor', 'Active', '2026-08-21 11:32:24', '2026-09-04 03:46:04'),
+(22, 'HTT00120', 'RATHIN KUMAR T M', 4, 'Engineer', 'Employee', 'Active', '2026-08-21 11:32:57', '2026-08-21 11:32:57'),
+(23, '6435', 'DAYANANDA S G', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:33:31', '2026-08-21 11:33:31'),
+(24, 'HTT00113', 'RAKSHITH S SALIAN', 4, 'Engineer', 'Employee', 'Active', '2026-08-21 11:33:32', '2026-08-21 11:33:32'),
+(25, 'HTT00045', 'Sanganna Choudri', 4, 'SHIFT SUPERVISOR', 'Employee', 'Active', '2026-08-21 11:34:03', '2026-08-21 11:34:03'),
+(26, '6438', 'SANJUKUMAR D PUJAR', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:34:09', '2026-08-21 11:34:09'),
+(27, '6143', 'THIPPESWAMY N J', 4, 'HELPER', 'Employee', 'Active', '2026-08-21 11:34:30', '2026-08-21 11:34:30'),
+(28, 'HTT00042', 'UPENDRA V APSANGI', 4, 'MANAGER', 'Employee', 'Active', '2026-08-21 11:34:31', '2026-08-21 11:34:31'),
+(29, '6154', 'MUNIRAJU M R', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:34:55', '2026-08-21 11:34:55'),
+(30, 'HTT00034', 'ANBU SADARACH A', 4, 'SHIFT SUPERVISOR', 'Employee', 'Active', '2026-08-21 11:34:57', '2026-08-21 11:34:57'),
+(31, '6156', 'MANJUNATH', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:35:21', '2026-08-21 11:35:21'),
+(32, 'HTT00027', 'G SIDDAPPA', 4, 'ASSISTANT MANAGER', 'Employee', 'Active', '2026-08-21 11:35:27', '2026-08-21 11:35:27'),
+(33, '6423', 'SATHISH G', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:35:43', '2026-08-21 11:35:43'),
+(34, 'HTT00023', 'AMANULLA', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:35:53', '2026-08-21 11:35:53'),
+(35, '6443', 'DHANANJAYA N', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:36:08', '2026-08-21 11:36:08'),
+(36, 'HTT00020', 'MURALIDHAR S K', 4, 'SUPERVISOR', 'Employee', 'Active', '2026-08-21 11:36:15', '2026-08-21 11:36:15'),
+(37, '6446', 'MANOJ UMESH JOGALEKAR', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:36:33', '2026-08-21 11:36:33'),
+(38, 'HTT00015', 'M R SHAKTHI PRATHAP', 4, 'ASSISTANT MANAGER', 'Employee', 'Active', '2026-08-21 11:36:46', '2026-08-21 11:36:46'),
+(39, '6447', 'LAKSHMIKANTH CHANDRASHEKAR GOUDA', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:36:58', '2026-08-21 11:36:58'),
+(40, 'HTT00014', 'T S MURALI', 4, 'TECHNICIAN', 'Employee', 'Active', '2026-08-21 11:37:13', '2026-08-21 11:37:13'),
+(41, '6455', 'RAGHAVENDRA BOMMAGOUDA', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:37:24', '2026-08-21 11:37:24'),
+(42, 'HTT00012', 'ASHOK F GANJIGATTI', 4, 'ASSISTANT MANAGER', 'Employee', 'Active', '2026-08-21 11:37:55', '2026-08-21 11:37:55'),
+(43, '6456', 'GANESH HULIYAPPA GOUDA', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:37:57', '2026-08-21 11:37:57'),
+(44, '6458', 'PUTTARAJA NAIK V', 4, 'ELECTRICIAN', 'Employee', 'Active', '2026-08-21 11:38:19', '2026-08-21 11:42:20'),
+(45, 'HTT00010', 'RAMESH K', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:38:37', '2026-08-21 11:38:37'),
+(46, '6462', 'BOGESH', 4, 'HELPER', 'Employee', 'Active', '2026-08-21 11:38:55', '2026-08-21 11:38:55'),
+(47, 'HTT00007', 'G SREERAMULU NAIDU', 4, 'ASSISTANT MANAGER', 'Employee', 'Active', '2026-08-21 11:39:03', '2026-08-21 11:39:03'),
+(48, '6459', 'THIPPESHA H', 4, 'ELECTRICIAN', 'Employee', 'Active', '2026-08-21 11:39:24', '2026-08-21 11:42:07'),
+(49, '6419', 'MANOJ B.D', 4, 'ELECTRICIAN', 'Employee', 'Active', '2026-08-21 11:39:35', '2026-08-21 11:41:51'),
+(50, '6176', 'YATHISH CS', 4, 'FITTER', 'Employee', 'Active', '2026-08-21 11:39:55', '2026-08-21 11:39:55'),
+(51, '6139', 'DEVARAJ E', 4, 'ELECTRICIAN', 'Employee', 'Active', '2026-08-21 11:40:08', '2026-08-21 11:41:21');
 
 -- --------------------------------------------------------
 
@@ -367,6 +368,7 @@ INSERT INTO `sub_activities` (`id`, `department_activity_id`, `sub_activity_name
 CREATE TABLE `work_logs` (
   `id` int(11) NOT NULL,
   `employee_id` int(11) NOT NULL,
+  `entered_by_employee_id` int(11) NOT NULL,
   `department_id` int(11) NOT NULL,
   `project_id` int(11) DEFAULT NULL,
   `activity_id` int(11) NOT NULL,
@@ -383,20 +385,20 @@ CREATE TABLE `work_logs` (
 -- Dumping data for table `work_logs`
 --
 
-INSERT INTO `work_logs` (`id`, `employee_id`, `department_id`, `project_id`, `activity_id`, `sub_activity_id`, `department_work_type_id`, `work_date`, `duration_minutes`, `remarks`, `created_at`, `updated_at`) VALUES
-(45, 47, 4, 3, 4, 31, 1, '2026-08-29', 60, '', '2026-08-29 07:06:32', '2026-08-29 07:06:32'),
-(46, 47, 4, 3, 20, 100, 1, '2026-08-29', 60, '', '2026-08-29 07:10:41', '2026-08-29 07:10:41'),
-(47, 51, 4, 7, 4, 31, 1, '2026-08-29', 270, '', '2026-08-29 07:14:56', '2026-08-29 07:14:56'),
-(50, 51, 4, 3, 19, 98, 2, '2026-08-29', 30, '', '2026-08-29 07:17:32', '2026-08-29 07:17:32'),
-(52, 51, 4, 3, 4, 33, 1, '2026-08-29', 260, '', '2026-08-29 08:04:18', '2026-08-29 08:04:18'),
-(53, 47, 4, 3, 15, 86, 1, '2026-08-29', 60, '', '2026-08-29 08:44:21', '2026-08-29 08:44:21'),
-(54, 47, 4, 3, 20, 100, 1, '2026-08-29', 90, '', '2026-08-29 08:49:54', '2026-08-29 08:49:54'),
-(55, 51, 4, 3, 13, 84, 3, '2026-08-29', 60, '', '2026-08-29 08:50:50', '2026-08-29 08:50:50'),
-(56, 47, 4, 33, 15, 87, 1, '2026-08-29', 135, '', '2026-08-29 08:53:29', '2026-08-29 08:53:29'),
-(57, 11, 4, 29, 13, 84, 3, '2026-08-29', 30, '', '2026-08-29 08:54:09', '2026-08-29 08:54:09'),
-(58, 51, 4, 8, 4, 31, 1, '2026-08-29', 210, '', '2026-08-29 09:12:05', '2026-08-29 09:12:05'),
-(59, 42, 4, NULL, 9, 58, 1, '2026-08-29', 90, '', '2026-08-29 09:32:23', '2026-08-29 09:32:23'),
-(60, 48, 4, 6, 6, 36, 1, '2026-08-29', 112, '', '2026-08-29 10:09:46', '2026-08-29 10:09:46');
+INSERT INTO `work_logs` (`id`, `employee_id`, `entered_by_employee_id`, `department_id`, `project_id`, `activity_id`, `sub_activity_id`, `department_work_type_id`, `work_date`, `duration_minutes`, `remarks`, `created_at`, `updated_at`) VALUES
+(61, 34, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 07:16:41', '2026-09-04 07:16:41'),
+(62, 34, 21, 4, 3, 15, 90, 1, '2026-09-04', 122, NULL, '2026-09-04 07:20:03', '2026-09-04 07:20:03'),
+(63, 21, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 08:22:47', '2026-09-04 08:22:47'),
+(64, 21, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 08:53:36', '2026-09-04 08:53:36'),
+(65, 21, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 09:08:22', '2026-09-04 09:08:22'),
+(66, 34, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 09:12:30', '2026-09-04 09:12:30'),
+(67, 39, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 09:12:58', '2026-09-04 09:12:58'),
+(68, 39, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 09:26:36', '2026-09-04 09:26:36'),
+(69, 30, 21, 4, 5, 20, 102, 3, '2026-09-04', 125, NULL, '2026-09-04 09:30:21', '2026-09-04 09:30:21'),
+(70, 21, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 09:45:49', '2026-09-04 09:45:49'),
+(71, 21, 21, 4, 3, 15, 90, 1, '2026-09-04', 30, NULL, '2026-09-04 10:46:05', '2026-09-04 10:46:05'),
+(72, 21, 21, 4, 3, 15, 90, 1, '2026-09-04', 30, NULL, '2026-09-04 11:17:30', '2026-09-04 11:17:30'),
+(73, 30, 21, 4, 3, 15, 90, 1, '2026-09-04', 60, NULL, '2026-09-04 11:35:38', '2026-09-04 11:35:38');
 
 -- --------------------------------------------------------
 
@@ -548,7 +550,7 @@ ALTER TABLE `sub_activities`
 -- AUTO_INCREMENT for table `work_logs`
 --
 ALTER TABLE `work_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `work_types`
