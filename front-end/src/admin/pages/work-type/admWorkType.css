@@ -1,0 +1,91 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.work-type-dash {
+    padding: 20px;
+    overflow-y: scroll;
+    height: 100%
+}
+
+.work-type-dash-header {
+    background-color: #1e293b;
+    color: #ffffff;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+}
+
+.work-type-dash-form {
+    margin-top: 20px;
+}
+
+.work-type-dash-search {
+    margin-top: 20px;
+}
+
+.work-type-dash-search > input {
+    height: 35px;
+    border: none;
+    background-color: #ddd;
+    width: 100%;
+    outline: none;
+    color: #000;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.work-type-dash-search > input:active {
+    border: none;
+    outline: none;
+}
+
+.work-type-list-controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+}
+
+
+.work-type-dash-table table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.work-type-dash-table th,
+.work-type-dash-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.work-type-dash-table th {
+    background-color: #1e293b;
+    color: white;
+}
+
+.work-type-list-pagination { 
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.work-type-list-pagination span {
+    color: #1e293b;
+}
+
+.work-type-list-pagination button {
+    border: none;
+    padding: 6px 6px;
+    background: none;
+    color: #ddd;
+    background-color: #1e293b;
+    border-radius: 8px;
+}

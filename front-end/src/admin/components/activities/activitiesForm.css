@@ -1,0 +1,27 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.activities-dash-form-comp > h4 {
+    text-transform: uppercase;
+}
+
+.activities-dash-form-comp > form {
+    margin-top: 15px;
+    width: 280px;
+}
+
+.activities-form-grp {
+    display: flex;
+    justify-content: space-between;
+}
+
+.activities-form-grp:last-of-type {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}

@@ -1,0 +1,31 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.projects-dash-form-comp > h4 {
+    text-transform: uppercase;
+}
+
+.projects-dash-form-comp > form {
+    margin-top: 15px;
+    width: 300px;
+}
+
+.projects-form-grp {
+    display: flex;
+    justify-content: space-between;
+}
+
+.projects-form-grp > textarea {
+    width: 165px;
+}
+
+.projects-form-grp:last-of-type {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}

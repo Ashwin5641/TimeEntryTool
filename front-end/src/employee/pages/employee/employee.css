@@ -1,0 +1,236 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.employee-page {
+    width: 100%;
+    flex: 1;
+    background-color: #f5f7fb;
+    padding: 20px 8vw;
+}
+
+.employee-page-search-empID {
+    width: 100%;
+    background-color: #fefefe;
+    border-radius: 20px;
+    box-shadow: 3px 1px 3px rgba(207, 204, 204, 0.281);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.employee-page-search-empID > p:first-of-type {
+    height: 110px;
+    width: 110px;
+    background-color: #eff4fe;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.fa-idCard {
+    color: #ed1f24;
+    font-size: 58px;
+}
+
+.employee-page-search-empID > p:first-of-type > span:nth-of-type(2) {
+    position: absolute;
+    height: 45px;
+    width: 45px;
+    bottom: -5%;
+    right: 10%;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fefefe;
+    box-shadow: 3px 1px 3px rgba(207, 204, 204, 0.281);
+}
+
+.fa-qrCode {
+    color: #ed1f24;
+    font-size: 24px;
+}
+
+.employee-page-search-empID > p:nth-of-type(2) {
+    font-weight: 700;
+    color: #011a4a;
+}
+
+.employe-page-search-empId-instruct {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #818799;
+}
+
+.employee-page-search-empID-input {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.employee-page-search-empID-input > span:first-of-type {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.fa-inputUser {
+    color: #ed1f24;
+    font-size: 20px;
+}
+
+.employee-page-search-empID-input > form {
+    display: flex;
+}
+
+.employee-page-search-empID-input > form > input {
+    height: 45px;
+    width: 390px;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #ed1f24;
+    padding: 10px 0px 10px 45px;
+    color: #011a4a;
+    flex: 1;
+}
+
+.employee-page-search-empID-input > form > input:focus {
+    border: 1px solid #ed1f24;
+    outline: none;
+    box-shadow: none;
+}
+
+.employee-page-search-empID-input > form > button {
+    width: 60px;
+    height: 46px;
+    background-color: #ed1f24;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.fa-rightArrow {
+    color: #eff4fe;
+}
+
+.employee-page-or {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.employee-page-or > p {
+    color: #818799;
+    font-size: 14px;
+}
+
+.employee-page-or > div:first-of-type,
+.employee-page-or > div:nth-of-type(2) {
+    width: 200px;
+    height: 1px;
+    background-color: #818799;
+}
+
+.employee-page-or-qr {
+    height: 80px;
+    width: 450px;
+    background-color: #eff4fe;
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.employee-page-or-qr > p:first-of-type {
+    background-color: #fefefe;
+    height: 60px;
+    width: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    font-size: 32px;
+    color: #ed1f24;
+}
+
+.employee-page-or-qr-instruct > p:first-of-type {
+    color: #011a4a;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.employee-page-or-qr-instruct > p:nth-of-type(2) {
+    color: #818799;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.employee-page-instructions {
+    height: 100px;
+    margin-top: 20px;
+    border-radius: 20px;
+    background-color: #fefefe;
+    box-shadow: 3px 1px 3px rgba(207, 204, 204, 0.281);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px;
+}
+
+.employee-page-instructions > p:first-of-type {
+    color: #011a4a;
+}
+
+.employee-page-instructions-step {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.employee-page-instructions-step > p:first-of-type {
+    background-color: #ed1f24;
+    color: #fefefe;
+    height: 25px;
+    width: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+}
+
+.employee-page-instructions-step > p:nth-of-type(2) {
+    height: 30px;
+    width: 30px;
+    background-color: #eff4fe;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #011a4a;
+    border-radius: 5px;
+}
+
+.employee-page-instructions-step-nvgte > p {
+    color: #818799;
+}
+
+.employee-page-instructions-step-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #011a4a;
+    font-size: 13px;
+}

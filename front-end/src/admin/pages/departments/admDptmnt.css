@@ -1,0 +1,89 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.dprtmnts-dash {
+    padding: 20px;
+    overflow-y: scroll;
+    height: 100%
+}
+
+.dprtmnts-dash-header {
+    background-color: #1e293b;
+    color: #ffffff;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+}
+
+.dprtmnts-dash-form {
+    margin-top: 20px;
+}
+
+.dprtmnts-dash-search {
+    margin-top: 20px;
+}
+
+.dprtmnts-dash-search > input {
+    height: 35px;
+    border: none;
+    background-color: #ddd;
+    width: 100%;
+    outline: none;
+    color: #000;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.dprtmnts-dash-search > input:active {
+    border: none;
+    outline: none;
+}
+
+.dprtmnts-controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+}
+
+.dprtmnts-dash-table table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dprtmnts-dash-table th,
+.dprtmnts-dash-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.dprtmnts-dash-table th {
+    background-color: #1e293b;
+    color: white;
+}
+
+.dprtmnts-pagination { 
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.dprtmnts-pagination span {
+    color: #1e293b;
+}
+
+.dprtmnts-pagination button {
+    border: none;
+    padding: 6px 6px;
+    background: none;
+    color: #ddd;
+    background-color: #1e293b;
+    border-radius: 8px;
+}

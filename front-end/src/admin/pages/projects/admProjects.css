@@ -1,0 +1,89 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.projects-dash {
+    padding: 20px;
+    overflow-y: scroll;
+    height: 100%
+}
+
+.projects-dash-header {
+    background-color: #1e293b;
+    color: #ffffff;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+}
+
+.projects-dash-form {
+    margin-top: 20px;
+}
+
+.projects-dash-search {
+    margin-top: 20px;
+}
+
+.projects-dash-search > input {
+    height: 35px;
+    border: none;
+    background-color: #ddd;
+    width: 100%;
+    outline: none;
+    color: #000;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.projects-dash-search > input:active {
+    border: none;
+    outline: none;
+}
+
+.projects-list-controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+}
+
+.projects-dash-table table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.projects-dash-table th,
+.projects-dash-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.projects-dash-table th {
+    background-color: #1e293b;
+    color: white;
+}
+
+.projects-list-pagination { 
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.projects-list-pagination span {
+    color: #1e293b;
+}
+
+.projects-list-pagination button {
+    border: none;
+    padding: 6px 6px;
+    background: none;
+    color: #ddd;
+    background-color: #1e293b;
+    border-radius: 8px;
+}

@@ -1,0 +1,85 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.employees-list-dash {
+    padding: 20px;
+    overflow-y: scroll;
+    height: 100%
+}
+
+.employees-list-dash-header {
+    background-color: #1e293b;
+    color: #ffffff;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-transform: uppercase;
+}
+
+.employees-list-dash-search {
+    margin-top: 20px;
+}
+
+.employees-list-dash-search > input {
+    height: 35px;
+    border: none;
+    background-color: #ddd;
+    width: 100%;
+    outline: none;
+    color: #000;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.employees-list-dash-search > input:active {
+    border: none;
+    outline: none;
+}
+
+.employees-list-controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+}
+
+.employees-list-dash-table table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.employees-list-dash-table th,
+.employees-list-dash-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.employees-list-dash-table th {
+    background-color: #1e293b;
+    color: white;
+}
+
+.employees-list-pagination { 
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.employees-list-pagination span {
+    color: #1e293b;
+}
+
+.employees-list-pagination button {
+    border: none;
+    padding: 6px 6px;
+    background: none;
+    color: #ddd;
+    background-color: #1e293b;
+    border-radius: 8px;
+}

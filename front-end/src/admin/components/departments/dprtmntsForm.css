@@ -1,0 +1,21 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.dprtmnts-dash-form-comp > h4 {
+    text-transform: uppercase;
+}
+
+.dprtmnts-dash-form-comp > form {
+    margin-top: 15px;
+    width: 280px;
+}
+
+.dprtmnts-form-grp {
+    display: flex;
+    justify-content: space-between;
+}

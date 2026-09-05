@@ -1,0 +1,49 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.admin-sidebar {
+    width: 250px;
+    height: 100%;
+    background-color: #1e293b;
+    padding: 20px;
+    overflow-y: scroll;
+}
+
+.admin-sidebar h4 {
+    text-align: center;
+    color: #ffffff;
+    text-transform: uppercase;
+}
+
+.admin-sidebar ul {
+    margin-top: 30px;
+}
+
+.admin-sidebar-menu {
+    text-decoration: none;
+    color: #ffffff;
+}
+
+.admin-sidebar ul li {
+    padding: 15px 0;
+    border-bottom: 1px solid #eeeeee1a;
+    list-style: none;
+}
+
+.admin-sidebar-parent {
+    width: 100%;
+    background: none;
+    border: none;
+    color: white;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-sidebar-submenu {
+    margin-left: 15px;
+}

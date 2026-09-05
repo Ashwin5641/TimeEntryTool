@@ -1,0 +1,32 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+}
+
+.dprtmnt-activities-dash-form-comp > h4 {
+    text-transform: uppercase;
+}
+
+.dprtmnt-activities-dash-form-comp > form {
+    margin-top: 15px;
+    width: 350px;
+}
+
+.dprtmnt-activities-form-grp {
+    display: flex;
+    justify-content: space-between;
+}
+
+.dprtmnt-activities-form-grp:first-of-type > :nth-child(2),
+.dprtmnt-activities-form-grp:nth-of-type(2) > :nth-child(2) {
+    width: 200px;
+}
+
+.dprtmnt-activities-form-grp:last-of-type {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}

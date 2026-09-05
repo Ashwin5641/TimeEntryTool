@@ -1,0 +1,17 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.employee-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.employee-content {
+    flex: 1;
+    display: flex;
+}
