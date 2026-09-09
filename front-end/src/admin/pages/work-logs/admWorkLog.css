@@ -48,6 +48,12 @@
     gap: 8px;
 }
 
+.worklogs-date-filter {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+}
+
 .worklogs-dash-table table {
     margin-top: 20px;
     width: 100%;

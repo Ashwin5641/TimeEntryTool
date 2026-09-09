@@ -88,6 +88,7 @@ export default function AdmEmpList() {
                             <th>Employee Name</th>
                             <th>Department Name</th>
                             <th>Designation</th>
+                            <th>Role</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -100,6 +101,7 @@ export default function AdmEmpList() {
                                 <td>{employee.employee_name}</td>
                                 <td>{employee.department_name}</td>
                                 <td>{employee.designation}</td>
+                                <td>{employee.role}</td>
                                 <td>{employee.status}</td>
                                 <td>
                                     <button onClick={() => navigate(`/admin/employees/edit/${employee.id}`)}>Edit</button>

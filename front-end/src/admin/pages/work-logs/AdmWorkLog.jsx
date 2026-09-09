@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import './admWorkLog.css'
 
-import { getAllWorkLogs } from "../../api/admWorkLogApi";
+import { getAllWorkLogs, downloadWorkLogs } from "../../api/admWorkLogApi";
 
 export default function AdmWorkLog() {
 
@@ -12,7 +12,9 @@ export default function AdmWorkLog() {
     const [limit, setLimit] = useState(10);
     const [sort, setSort] = useState('newest');
     const [totalPages, setTotalPages] = useState(1);
-    const [totalRecords, setTotalRecords] = useState(0)
+    const [totalRecords, setTotalRecords] = useState(0);
+    const [workDate, setWorkDate] = useState('');
+    const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -20,11 +22,11 @@ export default function AdmWorkLog() {
         }, 400);
 
         return () => clearTimeout(timer)
-    }, [search, page, limit, sort])
+    }, [search, page, limit, sort, workDate])
 
     const fetchAllWorklogs = async () => {
         try {
-            const res = await getAllWorkLogs(search, page, limit, sort);
+            const res = await getAllWorkLogs(search, page, limit, sort, workDate);
             setWorklogs(res.data);
             setTotalPages(res.pagination.totalPages);
             setTotalRecords(res.pagination.totalRecords)
@@ -32,6 +34,23 @@ export default function AdmWorkLog() {
             console.error(err)
         }
     }
+
+    const handleDownload = async () => {
+        try {
+            setDownloading(true);
+
+            await downloadWorkLogs(
+                search,
+                sort,
+                workDate
+            );
+
+        } catch (err) {
+            console.error('Download error:', err);
+        } finally {
+            setDownloading(false);
+        }
+    };
 
     return (
         <div className="worklogs-dash">
@@ -75,6 +94,37 @@ export default function AdmWorkLog() {
                         <option value="project_desc">Project Z-A</option>
                     </select>
                 </div>
+                <button
+                    type="button"
+                    onClick={handleDownload}
+                    disabled={downloading}
+                >
+                    {downloading ? 'Downloading...' : 'Download'}
+                </button>
+            </div>
+            <div className="worklogs-date-filter">
+                <label>Date: </label>
+
+                <input
+                    type="date"
+                    value={workDate}
+                    onChange={(e) => {
+                        setWorkDate(e.target.value);
+                        setPage(1);
+                    }}
+                />
+
+                {workDate && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setWorkDate('');
+                            setPage(1);
+                        }}
+                    >
+                        Clear Date
+                    </button>
+                )}
             </div>
             <div className="worklogs-dash-table">
                 <table>
@@ -83,6 +133,7 @@ export default function AdmWorkLog() {
                             <th>Sl No</th>
                             <th>Date</th>
                             <th>Employee</th>
+                            <th>Entered By Employee</th>
                             <th>Department</th>
                             <th>Project</th>
                             <th>Activity</th>
@@ -98,6 +149,7 @@ export default function AdmWorkLog() {
                                 <td>{(page - 1) * limit + index + 1}</td>
                                 <td>{new Date(worklog.work_date).toLocaleDateString('en-In')}</td>
                                 <td>{worklog.employee_name}</td>
+                                <td>{worklog.entered_by_employee_name}</td>
                                 <td>{worklog.department_name}</td>
                                 <td>{worklog.project_name}</td>
                                 <td>{worklog.activity_name}</td>

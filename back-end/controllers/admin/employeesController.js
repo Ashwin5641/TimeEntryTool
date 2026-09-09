@@ -34,10 +34,11 @@ exports.createEmployee = async (req, res) => {
         employee_name,
         department_id,
         designation,
+        role,
         status
     } = req.body;
 
-    if (!employee_id || !employee_name || !department_id || !designation || !status) {
+    if (!employee_id || !employee_name || !department_id || !designation || !role || !status) {
         return res.status(400).json({
             success: false,
             messsage: 'Fill all the required fields'
@@ -54,7 +55,7 @@ exports.createEmployee = async (req, res) => {
             })
         }
 
-        await employeesModel.createEmployee(employee_id, employee_name, department_id, designation, status);
+        await employeesModel.createEmployee(employee_id, employee_name, department_id, designation, role, status);
 
         return res.status(201).json({
             success: true,
@@ -95,10 +96,11 @@ exports.updateEmployee = async (req, res) => {
         employee_name,
         department_id,
         designation,
+        role,
         status
     } = req.body;
 
-    if (!employee_id || !employee_name || !department_id || !designation || !status) {
+    if (!employee_id || !employee_name || !department_id || !designation || !role || !status) {
         return res.status(400).json({
             success: false,
             message: 'Fill all the required fields'
@@ -121,6 +123,7 @@ exports.updateEmployee = async (req, res) => {
             employee_name,
             department_id,
             designation,
+            role,
             status
         )
 

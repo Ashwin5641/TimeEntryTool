@@ -12,7 +12,7 @@ const employeesModel = {
         return rows[0]
     },
 
-    createEmployee: async (employee_id, employee_name, department_id, designation, status) => {
+    createEmployee: async (employee_id, employee_name, department_id, designation, role, status) => {
         const [result] = await db.query(
             `
             INSERT INTO employees
@@ -21,10 +21,11 @@ const employeesModel = {
             employee_name, 
             department_id, 
             designation,
+            role,
             status 
-            ) values (?, ?, ?, ?, ?)
+            ) values (?, ?, ?, ?, ?, ?)
             `,
-            [employee_id, employee_name, department_id, designation, status]
+            [employee_id, employee_name, department_id, designation, role, status]
         );
         return result.insertId;
     },
@@ -57,6 +58,7 @@ const employeesModel = {
                 e.department_id,
                 d.department_name AS department_name,
                 e.designation,
+                e.role,
                 e.status,
                 e.created_at
             FROM 
@@ -115,6 +117,7 @@ const employeesModel = {
                 e.department_id,
                 d.department_name AS department_name,
                 e.designation,
+                e.role,
                 e.status,
                 e.created_at
             FROM 
@@ -139,7 +142,7 @@ const employeesModel = {
         return rows[0]
     },
 
-    updateEmployee: async (id, employee_id, employee_name, department_id, designation, status) => {
+    updateEmployee: async (id, employee_id, employee_name, department_id, designation, role, status) => {
         const [result] = await db.query(
             `
             UPDATE 
@@ -149,11 +152,12 @@ const employeesModel = {
                 employee_name = ?,
                 department_id = ?,
                 designation = ?,
+                role = ?,
                 status = ?
             WHERE 
                 id = ?
             `,
-            [employee_id, employee_name, department_id, designation, status, id]
+            [employee_id, employee_name, department_id, designation, role, status, id]
         );
         return result.affectedRows;
     },
@@ -173,6 +177,7 @@ const employeesModel = {
                 e.department_id,
                 d.department_name AS department_name,
                 e.designation,
+                e.role,
                 e.status,
                 e.created_at
             FROM 
@@ -202,6 +207,7 @@ const employeesModel = {
                 e.department_id,
                 d.department_name AS department_name,
                 e.designation,
+                e.role,
                 e.status
             FROM 
                 employees e

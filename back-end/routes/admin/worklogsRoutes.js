@@ -9,4 +9,9 @@ router.get(
     worklogsController.getTodaySummary
 );
 
+router.get(
+    '/download',
+    worklogsController.downloadWorkLogs
+);
+
 module.exports = router;

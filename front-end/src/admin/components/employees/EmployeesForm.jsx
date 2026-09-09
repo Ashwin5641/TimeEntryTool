@@ -16,6 +16,7 @@ export default function EmployeesForm({editEmployee, setEditEmployee}) {
         employee_name: '',
         department_id: '',
         designation: '',
+        role: 'Employee',
         status: 'Active'
     });
 
@@ -33,6 +34,7 @@ export default function EmployeesForm({editEmployee, setEditEmployee}) {
                 employee_name: editEmployee.employee_name,
                 department_id: editEmployee.department_id,
                 designation: editEmployee.designation,
+                role: editEmployee.role,
                 status: editEmployee.status
             })
         } else {
@@ -41,6 +43,7 @@ export default function EmployeesForm({editEmployee, setEditEmployee}) {
                 employee_name: '',
                 department_id: '',
                 designation: '',
+                role: 'Employee',
                 status: 'Active'
             })
         }
@@ -84,6 +87,7 @@ export default function EmployeesForm({editEmployee, setEditEmployee}) {
                     employee_name: '',
                     department_id: '',
                     designation: '',
+                    role: 'Employee',
                     status: 'Active'
                 })
                 navigate('/admin/employees-list')
@@ -131,6 +135,18 @@ export default function EmployeesForm({editEmployee, setEditEmployee}) {
                 <div className="employee-form-grp">
                     <label htmlFor="designation">Designation: </label>
                     <input name="designation" value={form.designation} onChange={handleChange} type="text" placeholder="Enter Designation" />
+                </div>
+                <br />
+                <div className="employee-form-grp">
+                    <label htmlFor="role">Role: </label>
+                    <select 
+                        name="role"
+                        value={form.role}
+                        onChange={handleChange}
+                    >
+                        <option value="Employee">Employee</option>
+                        <option value="Supervisor">Supervisor</option>
+                    </select>
                 </div>
                 <br />
                 <div className="employee-form-grp">
