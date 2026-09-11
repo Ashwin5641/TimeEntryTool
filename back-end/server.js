@@ -28,6 +28,10 @@ app.use(session({
     saveUninitialized: false
 }))
 
+// for the authentication
+
+app.use('/auth', require('./routes/authentication/authRoutes'));
+
 // for the admin dashboard
 
 app.use('/admin/departments', require('./routes/admin/departmentsRoutes'));

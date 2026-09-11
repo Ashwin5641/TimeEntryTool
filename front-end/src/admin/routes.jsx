@@ -1,5 +1,7 @@
 import AdminLayout from "./layout/AdminLayout";
 
+import ProtectedRoute from "../shared/guards/ProtectedRoute";
+
 import AdmDashboard from "./pages/dashboard/AdmDashboard";
 import AdmDptmnt from "./pages/departments/AdmDptmnt";
 import AdmEmployees from "./pages/employees/admEmployees";
@@ -15,7 +17,11 @@ import AdmWorkLog from "./pages/work-logs/AdmWorkLog";
 const adminRoutes = [
     {
         path: '/admin',
-        element: <AdminLayout />,
+        element: (
+            <ProtectedRoute role="admin">
+                <AdminLayout />
+            </ProtectedRoute>
+        ),
         children: [
             {
                 index: true,

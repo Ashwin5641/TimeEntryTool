@@ -690,13 +690,14 @@ export default function EmpFillDetails() {
             .map(project => ({
                 value: Number(project.id),
 
-                label: project.project_name
-                    ? `${project.project_name}${
-                        project.customer_name
-                            ? ` / ${project.customer_name}`
-                            : ""
-                    }`
-                    : ""
+                label:
+                    project.project_name
+                        ? `${project.project_name}${
+                            project.customer_name
+                                ? ` / ${project.customer_name}`
+                                : ""
+                        }`
+                        : ""
             }))
             .filter(option =>
                 Number.isFinite(option.value)
@@ -787,6 +788,99 @@ export default function EmpFillDetails() {
                 ) || null
 
                 : null;
+
+    // =======================================================
+    // Selected work type
+    // =======================================================
+
+    const selectedWorkType =
+        workTypes.find(
+            workType =>
+                Number(workType?.id) ===
+                Number(form.department_work_type_id)
+        );
+
+    const selectedWorkTypeName =
+        String(
+            selectedWorkType?.work_type_name ??
+            selectedWorkType?.workTypeName ??
+            selectedWorkType?.work_type ??
+            selectedWorkType?.workType ??
+            selectedWorkType?.name ??
+            ""
+        )
+            .trim()
+            .toLowerCase();
+
+    // =======================================================
+    // Leave / Permission
+    // This is ONE single work type option.
+    // =======================================================
+
+    const isLeaveOrPermission =
+        selectedWorkTypeName ===
+        "leave / permission";
+
+    // =======================================================
+    // Activity
+    // =======================================================
+
+    const selectedActivity =
+        activities.find(
+            activity =>
+                Number(
+                    activity?.id ??
+                    activity?.activity_id
+                ) ===
+                Number(form.activity_id)
+        );
+
+    const isOtherActivity =
+        selectedActivity
+            ?.activity_name
+            ?.trim()
+            ?.toLowerCase() ===
+        "other";
+
+    // =======================================================
+    // Selected sub activity
+    // =======================================================
+
+    const selectedSubActivity =
+        subActivities.find(
+            subActivity =>
+                Number(subActivity?.id) ===
+                Number(form.sub_activity_id)
+        );
+
+    const isOtherSubActivity =
+        selectedSubActivity
+            ?.sub_activity_name
+            ?.trim()
+            ?.toLowerCase() ===
+        "other";
+
+    // =======================================================
+    // Remarks requirement
+    //
+    // Required when:
+    // 1. Leave / Permission
+    // 2. Sub Activity = Other
+    // =======================================================
+
+    const isRemarksRequired =
+        isLeaveOrPermission ||
+        isOtherSubActivity;
+
+    // =======================================================
+    // Project requirement
+    //
+    // Project is required for every work type EXCEPT
+    // Leave / Permission.
+    // =======================================================
+
+    const isProjectRequired =
+        !isLeaveOrPermission;
 
     // =======================================================
     // Select supervisor / My work log
@@ -1071,32 +1165,9 @@ export default function EmpFillDetails() {
     // Activity
     // =======================================================
 
-    const selectedActivity =
-        activities.find(
-            activity =>
-                Number(
-                    activity?.id ??
-                    activity?.activity_id
-                ) ===
-                Number(form.activity_id)
-        );
-
-    const isOtherActivity =
-        selectedActivity
-            ?.activity_name
-            ?.trim()
-            ?.toLowerCase() ===
-        "other";
-
     const handleActivityChange = selected => {
 
         setMessage("");
-
-        const selectedIsOther =
-            selected?.label
-                ?.trim()
-                ?.toLowerCase() ===
-            "other";
 
         setForm(prev => ({
             ...prev,
@@ -1104,16 +1175,61 @@ export default function EmpFillDetails() {
             activity_id:
                 selected?.value || "",
 
-            sub_activity_id: "",
-
-            project_id:
-                selectedIsOther
-                    ? ""
-                    : prev.project_id
+            sub_activity_id: ""
         }));
 
         setSubActivities([]);
         setLoadingSubActivities(false);
+    };
+
+    // =======================================================
+    // Work type change
+    // =======================================================
+
+    const handleWorkTypeChange = selected => {
+
+        setMessage("");
+
+        const selectedName =
+            selected?.label
+                ?.trim()
+                ?.toLowerCase() || "";
+
+        // Leave / Permission is ONE single work type option.
+        const selectedIsLeaveOrPermission =
+            selectedName ===
+            "leave / permission";
+
+        setForm(prev => ({
+            ...prev,
+
+            department_work_type_id:
+                selected?.value || "",
+
+            project_id:
+                selectedIsLeaveOrPermission
+                    ? ""
+                    : prev.project_id,
+
+            activity_id:
+                selectedIsLeaveOrPermission
+                    ? ""
+                    : prev.activity_id,
+
+            sub_activity_id:
+                selectedIsLeaveOrPermission
+                    ? ""
+                    : prev.sub_activity_id,
+
+            remarks:
+                prev.remarks
+        }));
+
+        if (selectedIsLeaveOrPermission) {
+
+            setSubActivities([]);
+            setLoadingSubActivities(false);
+        }
     };
 
     // =======================================================
@@ -1231,35 +1347,9 @@ export default function EmpFillDetails() {
             return;
         }
 
-        const activityId =
-            Number(form.activity_id);
-
-        if (
-            !Number.isFinite(activityId) ||
-            activityId <= 0
-        ) {
-
-            setMessage(
-                "Please select an activity."
-            );
-
-            return;
-        }
-
-        const subActivityId =
-            Number(form.sub_activity_id);
-
-        if (
-            !Number.isFinite(subActivityId) ||
-            subActivityId <= 0
-        ) {
-
-            setMessage(
-                "Please select a sub-activity."
-            );
-
-            return;
-        }
+        // ===================================================
+        // Work type validation
+        // ===================================================
 
         const workTypeId =
             Number(
@@ -1277,6 +1367,104 @@ export default function EmpFillDetails() {
 
             return;
         }
+
+        // ===================================================
+        // Project validation
+        //
+        // Project is compulsory unless the work type is
+        // Leave / Permission.
+        // ===================================================
+
+        let projectId = null;
+
+        if (isLeaveOrPermission) {
+
+            projectId = null;
+
+        } else {
+
+            projectId =
+                Number(form.project_id);
+
+            if (
+                !Number.isFinite(projectId) ||
+                projectId <= 0
+            ) {
+
+                setMessage(
+                    "Please select a project."
+                );
+
+                return;
+            }
+        }
+
+        // ===================================================
+        // Activity / Sub Activity validation
+        // Skip these for Leave / Permission
+        // ===================================================
+
+        let activityId = null;
+        let subActivityId = null;
+
+        if (!isLeaveOrPermission) {
+
+            activityId =
+                Number(form.activity_id);
+
+            if (
+                !Number.isFinite(activityId) ||
+                activityId <= 0
+            ) {
+
+                setMessage(
+                    "Please select an activity."
+                );
+
+                return;
+            }
+
+            subActivityId =
+                Number(form.sub_activity_id);
+
+            if (
+                !Number.isFinite(subActivityId) ||
+                subActivityId <= 0
+            ) {
+
+                setMessage(
+                    "Please select a sub-activity."
+                );
+
+                return;
+            }
+        }
+
+        // ===================================================
+        // Remarks validation
+        //
+        // Required for:
+        // 1. Leave / Permission
+        // 2. Sub Activity = Other
+        // ===================================================
+
+        if (
+            isRemarksRequired &&
+            !form.remarks?.trim()
+        ) {
+
+            setMessage(
+                isLeaveOrPermission
+                    ? "Remarks are required for Leave / Permission."
+                    : "Remarks are required when Sub Activity is Other."
+            );
+
+            return;
+        }
+
+        // ===================================================
+        // Time validation
+        // ===================================================
 
         const hoursValue =
             form.hours === ""
@@ -1351,6 +1539,10 @@ export default function EmpFillDetails() {
             return;
         }
 
+        // ===================================================
+        // Today's remaining time validation
+        // ===================================================
+
         const remainingMinutes =
             Math.max(
                 0,
@@ -1373,16 +1565,9 @@ export default function EmpFillDetails() {
             return;
         }
 
-        const projectId =
-            isOtherActivity
-                ? null
-                : (
-                    form.project_id
-                        ? Number(
-                            form.project_id
-                        )
-                        : null
-                );
+        // ===================================================
+        // Work log payload
+        // ===================================================
 
         const workLog = {
 
@@ -1536,10 +1721,6 @@ export default function EmpFillDetails() {
                 ================================================= */}
 
                 <aside className="empFillDetails-pge-details-and-summary">
-
-                    {/* =================================================
-                        WORK LOG CARD
-                    ================================================= */}
 
                     <section className="empFillDetails-pge-work-log-card">
 
@@ -1853,6 +2034,9 @@ export default function EmpFillDetails() {
 
                                 <label>
                                     Project Name
+                                    {isProjectRequired && (
+                                        <span> *</span>
+                                    )}
                                 </label>
 
                                 <Select
@@ -1888,12 +2072,12 @@ export default function EmpFillDetails() {
                                     }
                                     isDisabled={
                                         !targetEmployee ||
-                                        isOtherActivity
+                                        isLeaveOrPermission
                                     }
                                     isClearable
                                     placeholder={
-                                        isOtherActivity
-                                            ? "Not required for Other"
+                                        isLeaveOrPermission
+                                            ? "Not required for Leave / Permission"
                                             : "Select project"
                                     }
                                     maxMenuHeight={220}
@@ -1933,13 +2117,16 @@ export default function EmpFillDetails() {
                                         handleActivityChange
                                     }
                                     placeholder={
-                                        loadingActivities
-                                            ? "Loading activities..."
-                                            : form.department_id
-                                                ? "Select activity"
-                                                : "Select department first"
+                                        isLeaveOrPermission
+                                            ? "Not required for Leave / Permission"
+                                            : loadingActivities
+                                                ? "Loading activities..."
+                                                : form.department_id
+                                                    ? "Select activity"
+                                                    : "Select department first"
                                     }
                                     isDisabled={
+                                        isLeaveOrPermission ||
                                         !form.department_id ||
                                         loadingActivities
                                     }
@@ -1995,13 +2182,16 @@ export default function EmpFillDetails() {
                                         }
                                     }
                                     placeholder={
-                                        loadingSubActivities
-                                            ? "Loading sub activities..."
-                                            : form.activity_id
-                                                ? "Select sub activity"
-                                                : "Select activity first"
+                                        isLeaveOrPermission
+                                            ? "Not required for Leave / Permission"
+                                            : loadingSubActivities
+                                                ? "Loading sub activities..."
+                                                : form.activity_id
+                                                    ? "Select sub activity"
+                                                    : "Select activity first"
                                     }
                                     isDisabled={
+                                        isLeaveOrPermission ||
                                         !form.activity_id ||
                                         loadingSubActivities
                                     }
@@ -2048,21 +2238,7 @@ export default function EmpFillDetails() {
                                         ) || null
                                     }
                                     onChange={
-                                        selected => {
-
-                                            setMessage("");
-
-                                            setForm(
-                                                prev => ({
-                                                    ...prev,
-
-                                                    department_work_type_id:
-                                                        selected?.value ||
-                                                        ""
-                                                })
-                                            );
-
-                                        }
+                                        handleWorkTypeChange
                                     }
                                     placeholder={
                                         loadingWorkTypes
@@ -2160,7 +2336,10 @@ export default function EmpFillDetails() {
                         <div className="empFillDetails-pge-form-remarks">
 
                             <label>
-                                Remarks (optional)
+                                {isRemarksRequired
+                                    ? "Remarks *"
+                                    : "Remarks (optional)"
+                                }
                             </label>
 
                             <textarea
@@ -2171,7 +2350,11 @@ export default function EmpFillDetails() {
                                 onChange={
                                     handleChange
                                 }
-                                placeholder="Enter remarks"
+                                placeholder={
+                                    isRemarksRequired
+                                        ? "Please enter remarks"
+                                        : "Enter remarks"
+                                }
                             />
 
                         </div>
