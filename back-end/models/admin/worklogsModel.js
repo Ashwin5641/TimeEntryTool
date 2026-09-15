@@ -215,72 +215,147 @@ const workLogsModel = {
         };
     },
 
-    downloadWorkLogs: async (search, sort, workDate) => {
+    getEmployeesNotLogged: async (workDate) => {
 
-        const keyword = `%${search || ''}%`;
+        if (!workDate) {
+            throw new Error('Work date is required');
+        }
 
-        let orderBy = 'wl.created_at DESC';
+        const [rows] = await db.query(
+            `
+            SELECT
+                e.id,
+                e.employee_id,
+                e.employee_name,
+                e.department_id,
+                d.department_name
+
+            FROM employees e
+
+            LEFT JOIN departments d
+                ON e.department_id = d.id
+
+            LEFT JOIN work_logs wl
+                ON wl.employee_id = e.id
+                AND DATE(wl.work_date) = ?
+
+            WHERE
+                e.status = 'Active'
+                AND wl.id IS NULL
+
+            ORDER BY
+                d.department_name ASC,
+                e.employee_name ASC
+            `,
+            [workDate]
+        );
+
+        return rows;
+    },
+
+    downloadWorkLogs: async (
+        search,
+        sort,
+        workDate
+    ) => {
+
+        const keyword =
+            `%${search || ''}%`;
+
+        let orderBy =
+            'wl.created_at DESC';
 
         switch (sort) {
+
             case 'oldest':
-                orderBy = 'wl.created_at ASC';
+                orderBy =
+                    'wl.created_at ASC';
                 break;
 
             case 'employee_asc':
-                orderBy = 'e.employee_name ASC';
+                orderBy =
+                    'e.employee_name ASC';
                 break;
 
             case 'employee_desc':
-                orderBy = 'e.employee_name DESC';
+                orderBy =
+                    'e.employee_name DESC';
                 break;
 
             case 'department_asc':
-                orderBy = 'd.department_name ASC';
+                orderBy =
+                    'd.department_name ASC';
                 break;
 
             case 'department_desc':
-                orderBy = 'd.department_name DESC';
+                orderBy =
+                    'd.department_name DESC';
                 break;
 
             case 'project_asc':
-                orderBy = 'p.project_name ASC';
+                orderBy =
+                    'p.project_name ASC';
                 break;
 
             case 'project_desc':
-                orderBy = 'p.project_name DESC';
+                orderBy =
+                    'p.project_name DESC';
                 break;
 
             default:
-                orderBy = 'wl.created_at DESC';
+                orderBy =
+                    'wl.created_at DESC';
         }
 
         let sql = `
-            SELECT 
+            SELECT
+
                 wl.id,
+
                 wl.employee_id,
-                e.employee_name AS employee_name,
+
+                e.employee_name
+                    AS employee_name,
 
                 wl.entered_by_employee_id,
-                entered_by.employee_name AS entered_by_employee_name,
+
+                entered_by.employee_name
+                    AS entered_by_employee_name,
 
                 wl.department_id,
-                d.department_name AS department_name,
+
+                d.department_name
+                    AS department_name,
 
                 wl.project_id,
-                p.project_name AS project_name,
+
+                p.project_name
+                    AS project_name,
 
                 wl.activity_id,
-                a.activity_name AS activity_name,
+
+                a.activity_name
+                    AS activity_name,
 
                 wl.sub_activity_id,
-                sa.sub_activity_name AS sub_activity_name,
+
+                sa.sub_activity_name
+                    AS sub_activity_name,
 
                 wl.department_work_type_id,
-                wt.work_type_name AS work_type_name,
 
-                DATE_FORMAT(wl.work_date, '%Y-%m-%d') AS work_date,
+                wt.work_type_name
+                    AS work_type_name,
+
+                DATE_FORMAT(
+                    wl.work_date,
+                    '%Y-%m-%d'
+                ) AS work_date,
+
                 wl.duration_minutes,
+
                 wl.remarks,
+
                 wl.created_at
 
             FROM work_logs wl
@@ -309,7 +384,8 @@ const workLogsModel = {
             LEFT JOIN work_types wt
                 ON dwt.work_type_id = wt.id
 
-            WHERE (
+            WHERE
+            (
                 e.employee_name LIKE ?
                 OR d.department_name LIKE ?
                 OR p.project_name LIKE ?
@@ -329,19 +405,23 @@ const workLogsModel = {
         ];
 
         if (workDate) {
-            sql += ` AND DATE(wl.work_date) = ?`;
+
+            sql += `
+                AND DATE(wl.work_date) = ?
+            `;
+
             params.push(workDate);
         }
 
-        sql += ` ORDER BY ${orderBy}`;
+        sql += `
+            ORDER BY ${orderBy}
+        `;
 
-        console.log("DOWNLOAD SQL PARAMS:", params);
-        console.log("DOWNLOAD WORK DATE:", workDate);
-
-        const [rows] = await db.query(sql, params);
-
-        console.log("DOWNLOAD ROW COUNT:", rows.length);
-        console.log("DOWNLOAD FIRST ROW:", rows[0]);
+        const [rows] =
+            await db.query(
+                sql,
+                params
+            );
 
         return rows;
     },

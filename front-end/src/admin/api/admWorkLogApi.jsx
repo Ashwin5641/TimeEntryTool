@@ -1,6 +1,12 @@
 import api from "../../api/axios";
 
-export const getAllWorkLogs = async (search, page, limit, sort, workDate) => {
+export const getAllWorkLogs = async (
+    search,
+    page,
+    limit,
+    sort,
+    workDate
+) => {
     const res = await api.get('/admin/work-logs', {
         params: {
             search,
@@ -10,8 +16,10 @@ export const getAllWorkLogs = async (search, page, limit, sort, workDate) => {
             workDate
         }
     });
-    return res
-}
+
+    return res;
+};
+
 
 export const downloadWorkLogs = async (
     search,
@@ -19,20 +27,28 @@ export const downloadWorkLogs = async (
     workDate
 ) => {
 
-    const blob = await api.get('/admin/work-logs/download', {
-        params: {
-            search: search || '',
-            sort: sort || 'newest',
-            workDate: workDate || ''
-        },
-        responseType: 'blob'
-    });
+    const blob = await api.get(
+        '/admin/work-logs/download',
+        {
+            params: {
+                search: search || '',
+                sort: sort || 'newest',
+                workDate: workDate || ''
+            },
+            responseType: 'blob'
+        }
+    );
 
-    console.log('DOWNLOAD BLOB:', blob);
-    console.log('IS BLOB:', blob instanceof Blob);
+    console.log('Excel blob:', blob);
+    console.log('Blob size:', blob?.size);
+    console.log('Blob type:', blob?.type);
 
     if (!(blob instanceof Blob)) {
-        throw new Error('Download response is not a Blob');
+        throw new Error('Invalid Excel response');
+    }
+
+    if (blob.size === 0) {
+        throw new Error('Empty Excel file received');
     }
 
     const url = window.URL.createObjectURL(blob);
@@ -42,8 +58,8 @@ export const downloadWorkLogs = async (
     link.href = url;
 
     link.download = workDate
-        ? `work_logs_${workDate}.csv`
-        : 'work_logs_all.csv';
+        ? `work_logs_report_${workDate}.xlsx`
+        : 'work_logs_report.xlsx';
 
     document.body.appendChild(link);
 

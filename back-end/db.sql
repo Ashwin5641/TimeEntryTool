@@ -74,7 +74,7 @@ CREATE TABLE work_logs (
     project_id INT NULL,
     activity_id INT NOT NULL,
     sub_activity_id INT NOT NULL,
-    department_work_type_id INT NOT NULL
+    department_work_type_id INT NOT NULL,
     work_date DATE DEFAULT CURRENT_DATE,
     duration_minutes SMALLINT UNSIGNED NOT NULL,
     remarks TEXT NULL,
