@@ -694,7 +694,7 @@ export default function AdmWorkLog() {
                 </table>
 
             </div>
-
+            <br />
 
             {/* ==================================================
                 PAGINATION

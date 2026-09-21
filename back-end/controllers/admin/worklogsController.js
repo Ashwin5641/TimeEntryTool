@@ -15,277 +15,44 @@ try {
     );
 }
 
-
-// ============================================================
-// GET ALL WORK LOGS
-// ============================================================
-
-exports.getAllWorkLogs = async (req, res) => {
-
-    const {
-        search = '',
-        page = 1,
-        limit = 10,
-        sort = 'newest',
-        workDate = ''
-    } = req.query;
-
-    try {
-
-        const worklog =
-            await workLogsModel.getAllWorkLogs(
-                search,
-                Number(page),
-                Number(limit),
-                sort,
-                workDate
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            data: worklog.rows,
-
-            pagination: {
-                page: Number(page),
-                limit: Number(limit),
-                totalPages:
-                    Math.ceil(
-                        worklog.total / Number(limit)
-                    ),
-                totalRecords: worklog.total
-            }
-
-        });
-
-    } catch (err) {
-
-        console.error(
-            'Get All Work Logs Error:',
-            err
-        );
-
-        return res.status(500).json({
-            success: false,
-            message: 'Please try again later'
-        });
-
-    }
-
-};
-
-
-// ============================================================
-// TODAY SUMMARY
-// ============================================================
-
-exports.getTodaySummary = async (req, res) => {
-
-    const { employee_id } = req.params;
-
-    if (!employee_id) {
-
-        return res.status(400).json({
-            success: false,
-            message: 'Employee ID is required'
-        });
-
-    }
-
-    try {
-
-        const summary =
-            await workLogsModel.getTodaySummary(
-                employee_id
-            );
-
-        return res.status(200).json({
-
-            success: true,
-
-            data: summary
-
-        });
-
-    } catch (err) {
-
-        console.error(
-            'Today Summary Error:',
-            err
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message: 'Please try again later!'
-
-        });
-
-    }
-
-};
-
-
-// ============================================================
-// GET EMPLOYEES WHO HAVE NOT LOGGED
-// ============================================================
-//
-// Example:
-// GET /admin/work-logs/not-logged?workDate=2026-09-15
-//
-// Only ACTIVE employees are considered.
-//
-// An employee is considered logged when at least one
-// work_logs record exists for the selected date.
-//
-// ============================================================
-
-exports.getEmployeesNotLogged = async (req, res) => {
-
-    const {
-        workDate = ''
-    } = req.query;
-
-    if (!workDate) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            message: 'Work date is required'
-
-        });
-
-    }
-
-    try {
-
-        const employees =
-            await workLogsModel.getEmployeesNotLogged(
-                workDate
-            );
-
-        const result =
-            Array.isArray(employees)
-                ? employees
-                : [];
-
-        return res.status(200).json({
-
-            success: true,
-
-            data: result,
-
-            count: result.length,
-
-            workDate
-
-        });
-
-    } catch (err) {
-
-        console.error(
-            'Get Employees Not Logged Error:',
-            err
-        );
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-                'Failed to get employees who have not logged'
-
-        });
-
-    }
-
-};
-
-
 // ============================================================
 // BASIC HELPERS
 // ============================================================
 
 const safeNumber = (value) => {
-
-    const number = Number(value);
-
-    return Number.isFinite(number)
-        ? number
-        : 0;
-
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
 };
-
 
 const minutesToHours = (minutes) => {
-
-    return Number(
-        (
-            safeNumber(minutes) / 60
-        ).toFixed(2)
-    );
-
+    return Number((safeNumber(minutes) / 60).toFixed(2));
 };
-
 
 const formatMinutes = (minutes) => {
-
-    const total =
-        Math.max(
-            0,
-            Math.round(
-                safeNumber(minutes)
-            )
-        );
-
-    const hours =
-        Math.floor(total / 60);
-
-    const mins =
-        total % 60;
+    const total = Math.max(0, Math.round(safeNumber(minutes)));
+    const hours = Math.floor(total / 60);
+    const mins = total % 60;
 
     return `${hours}h ${mins}m`;
-
 };
 
-
-const cleanText = (
-    value,
-    fallback = 'Unknown'
-) => {
-
+const cleanText = (value, fallback = 'Unknown') => {
     if (
         value === null ||
         value === undefined ||
         String(value).trim() === ''
     ) {
-
         return fallback;
-
     }
 
     return String(value).trim();
-
 };
 
-
-// ============================================================
-// DATE HELPER
-// ============================================================
-
 const getDateKey = (value) => {
-
-    if (!value) {
-        return null;
-    }
+    if (!value) return null;
 
     if (typeof value === 'string') {
-
         return value.slice(0, 10);
-
     }
 
     const date =
@@ -293,25 +60,48 @@ const getDateKey = (value) => {
             ? value
             : new Date(value);
 
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
+    if (Number.isNaN(date.getTime())) {
         return null;
-
     }
 
-    return date
-        .toISOString()
-        .slice(0, 10);
-
+    return date.toISOString().slice(0, 10);
 };
 
+/*
+ * IMPORTANT:
+ * work_date is a MySQL DATE, not a timestamp.
+ *
+ * Do NOT create:
+ *
+ * new Date('2026-09-15T00:00:00')
+ *
+ * because ExcelJS / timezone conversion can turn it into
+ * 2026-09-14.
+ *
+ * We therefore write the calendar date as a string.
+ */
+const getExcelDate = (value) => {
+    const dateKey = getDateKey(value);
+
+    if (!dateKey) {
+        return '';
+    }
+
+    const match = dateKey.match(
+        /^(\d{4})-(\d{2})-(\d{2})$/
+    );
+
+    if (!match) {
+        return dateKey;
+    }
+
+    const [, year, month, day] = match;
+
+    return `${day}-${month}-${year}`;
+};
 
 // ============================================================
-// CREATE SUMMARY
+// SUMMARY
 // ============================================================
 
 const createSummary = (
@@ -319,48 +109,30 @@ const createSummary = (
     field,
     totalMinutes
 ) => {
-
     const map = {};
 
-    worklogs.forEach(row => {
-
-        const name =
-            cleanText(
-                row[field]
-            );
+    worklogs.forEach((row) => {
+        const name = cleanText(row[field]);
 
         if (!map[name]) {
-
             map[name] = {
-
                 name,
-
                 logs: 0,
-
                 minutes: 0
-
             };
-
         }
 
         map[name].logs += 1;
 
-        map[name].minutes +=
-            safeNumber(
-                row.duration_minutes
-            );
-
+        map[name].minutes += safeNumber(
+            row.duration_minutes
+        );
     });
 
-
     return Object.values(map)
-
-        .map(item => {
-
+        .map((item) => {
             const hours =
-                minutesToHours(
-                    item.minutes
-                );
+                minutesToHours(item.minutes);
 
             const percentage =
                 totalMinutes > 0
@@ -384,170 +156,104 @@ const createSummary = (
                     : 0;
 
             return {
-
                 name: item.name,
-
                 logs: item.logs,
-
                 minutes: item.minutes,
-
                 hours,
-
                 percentage,
-
                 avgHours
-
             };
-
         })
-
         .sort(
             (a, b) =>
                 b.minutes - a.minutes
         );
-
 };
 
-
-// ============================================================
-// UNIQUE WORK DATES
-// ============================================================
-
-const getUniqueWorkDates = (
-    worklogs
-) => {
-
+const getUniqueWorkDates = (worklogs) => {
     const dates = new Set();
 
-    worklogs.forEach(row => {
+    worklogs.forEach((row) => {
+        const date = getDateKey(row.work_date);
 
-        const dateKey =
-            getDateKey(
-                row.work_date
-            );
-
-        if (dateKey) {
-
-            dates.add(
-                dateKey
-            );
-
+        if (date) {
+            dates.add(date);
         }
-
     });
 
     return dates;
-
 };
 
-
 // ============================================================
-// CELL STYLING
+// EXCEL STYLING
 // ============================================================
 
 const styleCell = (
     cell,
     options = {}
 ) => {
-
     const {
-
         bold = false,
-
         size = 11,
-
         horizontal = 'left',
-
         fill = null,
-
         fontColor = '000000',
-
+        wrapText = true,
         borderColor = 'D9D9D9'
-
     } = options;
 
-
     cell.font = {
-
         name: 'Calibri',
-
         size,
-
         bold,
-
         color: {
             argb: fontColor
         }
-
     };
-
 
     cell.alignment = {
-
         vertical: 'middle',
-
         horizontal,
-
-        wrapText: true
-
+        wrapText
     };
 
-
     if (fill) {
-
         cell.fill = {
-
             type: 'pattern',
-
             pattern: 'solid',
-
             fgColor: {
                 argb: fill
             }
-
         };
-
     }
 
-
     cell.border = {
-
         top: {
             style: 'thin',
             color: {
                 argb: borderColor
             }
         },
-
         bottom: {
             style: 'thin',
             color: {
                 argb: borderColor
             }
         },
-
         left: {
             style: 'thin',
             color: {
                 argb: borderColor
             }
         },
-
         right: {
             style: 'thin',
             color: {
                 argb: borderColor
             }
         }
-
     };
-
 };
-
-
-// ============================================================
-// SECTION TITLE
-// ============================================================
 
 const addSectionTitle = (
     sheet,
@@ -556,65 +262,37 @@ const addSectionTitle = (
     endColumn,
     title
 ) => {
-
-    const cell =
-        sheet.getCell(
-            row,
-            startColumn
-        );
-
-    cell.value =
-        title;
-
-    styleCell(
-        cell,
-        {
-
-            bold: true,
-
-            size: 13,
-
-            fill: 'D9E2F3',
-
-            fontColor: '1F1F1F'
-
-        }
+    const cell = sheet.getCell(
+        row,
+        startColumn
     );
 
+    cell.value = title;
+
+    styleCell(cell, {
+        bold: true,
+        size: 13,
+        fill: 'D9E2F3',
+        fontColor: '1F1F1F'
+    });
+
     cell.alignment = {
-
-        horizontal: 'left',
-
         vertical: 'middle',
-
+        horizontal: 'left',
         wrapText: true
-
     };
 
-
     if (endColumn > startColumn) {
-
         sheet.mergeCells(
             row,
             startColumn,
             row,
             endColumn
         );
-
     }
 
-
-    // Increased from 25 to 32 so the title
-    // is clearly visible in Excel.
-
     sheet.getRow(row).height = 32;
-
 };
-
-
-// ============================================================
-// TABLE HEADER
-// ============================================================
 
 const addTableHeader = (
     sheet,
@@ -622,46 +300,24 @@ const addTableHeader = (
     startColumn,
     headers
 ) => {
+    headers.forEach((header, index) => {
+        const cell = sheet.getCell(
+            row,
+            startColumn + index
+        );
 
-    headers.forEach(
-        (header, index) => {
+        cell.value = header;
 
-            const cell =
-                sheet.getCell(
-                    row,
-                    startColumn + index
-                );
-
-            cell.value =
-                header;
-
-            styleCell(
-                cell,
-                {
-
-                    bold: true,
-
-                    horizontal: 'center',
-
-                    fill: 'EAF0F7',
-
-                    fontColor: '1F1F1F'
-
-                }
-            );
-
-        }
-    );
-
+        styleCell(cell, {
+            bold: true,
+            horizontal: 'center',
+            fill: 'EAF0F7',
+            fontColor: '1F1F1F'
+        });
+    });
 
     sheet.getRow(row).height = 28;
-
 };
-
-
-// ============================================================
-// EMPTY MESSAGE
-// ============================================================
 
 const addEmptyTableMessage = (
     sheet,
@@ -670,71 +326,82 @@ const addEmptyTableMessage = (
     endColumn,
     message = 'No data available'
 ) => {
-
-    const cell =
-        sheet.getCell(
-            row,
-            startColumn
-        );
-
-    cell.value =
-        message;
-
-    styleCell(
-        cell,
-        {
-            horizontal: 'center'
-        }
+    const cell = sheet.getCell(
+        row,
+        startColumn
     );
 
+    cell.value = message;
+
+    styleCell(cell, {
+        horizontal: 'center'
+    });
 
     if (endColumn > startColumn) {
-
         sheet.mergeCells(
             row,
             startColumn,
             row,
             endColumn
         );
-
     }
-
 };
 
+const addKpiCard = (
+    sheet,
+    column,
+    row,
+    label,
+    value
+) => {
+    const labelCell =
+        sheet.getCell(row, column);
+
+    labelCell.value = label;
+
+    styleCell(labelCell, {
+        bold: true,
+        horizontal: 'center',
+        fill: 'EAF0F7'
+    });
+
+    const valueCell =
+        sheet.getCell(row + 1, column);
+
+    valueCell.value = value;
+
+    styleCell(valueCell, {
+        bold: true,
+        size: 14,
+        horizontal: 'center',
+        fill: 'F7F9FB'
+    });
+
+    sheet.getRow(row).height = 26;
+    sheet.getRow(row + 1).height = 34;
+};
 
 // ============================================================
-// SUMMARY TABLE
+// SUMMARY SHEET
 // ============================================================
 
 const addSummaryTable = (
     sheet,
-    startRow,
-    startColumn,
     title,
     summary
 ) => {
-
-    const endColumn =
-        startColumn + 5;
-
-
     addSectionTitle(
         sheet,
-        startRow,
-        startColumn,
-        endColumn,
+        1,
+        1,
+        6,
         title
     );
 
-
-    const headerRow =
-        startRow + 1;
-
-
     addTableHeader(
         sheet,
-        headerRow,
-        startColumn,
+        2,
+        1,
         [
             'Name',
             'Entries',
@@ -745,169 +412,77 @@ const addSummaryTable = (
         ]
     );
 
-
     if (!summary.length) {
-
         addEmptyTableMessage(
             sheet,
-            headerRow + 1,
-            startColumn,
-            endColumn
+            3,
+            1,
+            6
         );
 
-        return headerRow + 1;
-
+        return;
     }
 
+    summary.forEach((item, index) => {
+        const row = index + 3;
 
-    summary.forEach(
-        (item, index) => {
+        const values = [
+            item.name,
+            item.logs,
+            item.minutes,
+            item.hours,
+            item.avgHours,
+            item.percentage / 100
+        ];
 
-            const row =
-                headerRow +
-                index +
-                1;
-
-
-            const values = [
-
-                item.name,
-
-                item.logs,
-
-                item.minutes,
-
-                item.hours,
-
-                item.avgHours,
-
-                item.percentage / 100
-
-            ];
-
-
-            values.forEach(
-                (value, valueIndex) => {
-
-                    const cell =
-                        sheet.getCell(
-                            row,
-                            startColumn +
-                            valueIndex
-                        );
-
-                    cell.value =
-                        value;
-
-                    styleCell(
-                        cell,
-                        {
-
-                            horizontal:
-                                valueIndex === 0
-                                    ? 'left'
-                                    : 'center'
-
-                        }
+        values.forEach(
+            (value, columnIndex) => {
+                const cell =
+                    sheet.getCell(
+                        row,
+                        columnIndex + 1
                     );
 
-                }
-            );
+                cell.value = value;
 
+                styleCell(cell, {
+                    horizontal:
+                        columnIndex === 0
+                            ? 'left'
+                            : 'center',
+                    wrapText:
+                        columnIndex === 0
+                });
+            }
+        );
 
-            sheet.getCell(
-                row,
-                startColumn + 5
-            ).numFmt =
-                '0.00%';
-
-        }
-    );
-
-
-    return (
-        headerRow +
-        summary.length
-    );
-
-};
-
-
-// ============================================================
-// KPI CARD
-// ============================================================
-
-const addKpiCard = (
-    sheet,
-    startColumn,
-    row,
-    label,
-    value
-) => {
-
-    const labelCell =
         sheet.getCell(
             row,
-            startColumn
-        );
+            6
+        ).numFmt = '0.00%';
 
-
-    labelCell.value =
-        label;
-
-
-    styleCell(
-        labelCell,
-        {
-
-            bold: true,
-
-            horizontal: 'center',
-
-            fill: 'EAF0F7'
-
+        if (row % 2 === 1) {
+            for (
+                let col = 1;
+                col <= 6;
+                col++
+            ) {
+                sheet.getCell(
+                    row,
+                    col
+                ).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: {
+                        argb: 'F8FAFC'
+                    }
+                };
+            }
         }
-    );
 
-
-    const valueCell =
-        sheet.getCell(
-            row + 1,
-            startColumn
-        );
-
-
-    valueCell.value =
-        value;
-
-
-    styleCell(
-        valueCell,
-        {
-
-            bold: true,
-
-            size: 14,
-
-            horizontal: 'center',
-
-            fill: 'F7F9FB'
-
-        }
-    );
-
-
-    sheet.getRow(
-        row
-    ).height = 26;
-
-
-    sheet.getRow(
-        row + 1
-    ).height = 34;
-
+        sheet.getRow(row).height = 24;
+    });
 };
-
 
 // ============================================================
 // WORK TYPE CHART
@@ -916,103 +491,63 @@ const addKpiCard = (
 const createWorkTypeChart = async (
     summary
 ) => {
-
     if (
         !ChartJSNodeCanvas ||
         !summary.length
     ) {
-
         return null;
-
     }
 
+    const items = summary.slice(0, 8);
 
-    const topItems =
-        summary.slice(0, 8);
-
-
-    const chartCanvas =
+    const canvas =
         new ChartJSNodeCanvas({
-
             width: 700,
-
             height: 380,
-
             backgroundColour: 'white'
-
         });
 
-
-    const configuration = {
-
+    return canvas.renderToBuffer({
         type: 'doughnut',
 
         data: {
-
-            labels:
-                topItems.map(
-                    item => item.name
-                ),
+            labels: items.map(
+                item => item.name
+            ),
 
             datasets: [
-
                 {
-
                     label: 'Hours',
 
-                    data:
-                        topItems.map(
-                            item => item.hours
-                        ),
+                    data: items.map(
+                        item => item.hours
+                    ),
 
                     borderWidth: 1
-
                 }
-
             ]
-
         },
 
         options: {
-
             responsive: false,
-
             maintainAspectRatio: false,
 
             plugins: {
-
                 title: {
-
                     display: true,
-
-                    text:
-                        'Hours by Work Type',
-
+                    text: 'Hours by Work Type',
                     font: {
                         size: 18
                     }
-
                 },
 
                 legend: {
-
                     position: 'right'
-
                 }
-
             }
-
         }
-
-    };
-
-
-    return chartCanvas.renderToBuffer(
-        configuration
-    );
-
+    });
 };
-
 
 // ============================================================
 // PROJECT CHART
@@ -1021,282 +556,173 @@ const createWorkTypeChart = async (
 const createProjectChart = async (
     summary
 ) => {
-
     if (
         !ChartJSNodeCanvas ||
         !summary.length
     ) {
-
         return null;
-
     }
 
+    const items = summary.slice(0, 8);
 
-    const topItems =
-        summary.slice(0, 8);
-
-
-    const chartCanvas =
+    const canvas =
         new ChartJSNodeCanvas({
-
             width: 760,
-
             height: 400,
-
             backgroundColour: 'white'
-
         });
 
-
-    const configuration = {
-
+    return canvas.renderToBuffer({
         type: 'bar',
 
         data: {
-
-            labels:
-                topItems.map(
-                    item => item.name
-                ),
+            labels: items.map(
+                item => item.name
+            ),
 
             datasets: [
-
                 {
-
                     label: 'Hours',
 
-                    data:
-                        topItems.map(
-                            item => item.hours
-                        ),
+                    data: items.map(
+                        item => item.hours
+                    ),
 
                     borderWidth: 1
-
                 }
-
             ]
-
         },
 
         options: {
-
             responsive: false,
-
             maintainAspectRatio: false,
-
             indexAxis: 'y',
 
             plugins: {
-
                 title: {
-
                     display: true,
-
-                    text:
-                        'Hours by Project',
-
+                    text: 'Hours by Project',
                     font: {
                         size: 18
                     }
-
                 },
 
                 legend: {
-
                     display: false
-
                 }
-
             },
 
             scales: {
-
                 x: {
-
                     beginAtZero: true,
 
                     title: {
-
                         display: true,
-
                         text: 'Hours'
-
                     }
-
                 }
-
             }
-
         }
-
-    };
-
-
-    return chartCanvas.renderToBuffer(
-        configuration
-    );
-
+    });
 };
-
 
 // ============================================================
 // DASHBOARD
 // ============================================================
 
 const buildDashboard = async (
-    dashboard,
+    sheet,
     data,
     workbook
 ) => {
-
     const {
-
         search,
-
         sort,
-
         workDate,
-
         totalLogs,
-
         totalHours,
-
         projectSet,
-
         workDatesSet,
-
         projectSummary,
-
         activitySummary,
-
         workTypeSummary,
-
         capacityMinutes,
-
         remainingMinutes,
-
         overtimeMinutes,
-
         utilization,
-
         activeEmployeeCount,
-
         loggedEmployeeCount,
-
         notLoggedEmployeeCount
-
     } = data;
 
+    // --------------------------------------------------------
+    // COLUMN WIDTHS
+    // --------------------------------------------------------
 
-    // ========================================================
-    // COLUMN LAYOUT
-    // ========================================================
-    //
-    // A-E = left content
-    // F   = spacer
-    // G-K = right content
-    //
-    // F increased from 6 to 8.
-    // ========================================================
+    sheet.getColumn(1).width = 25;
+    sheet.getColumn(2).width = 18;
+    sheet.getColumn(3).width = 18;
+    sheet.getColumn(4).width = 18;
+    sheet.getColumn(5).width = 18;
 
-    dashboard.getColumn(1).width = 25;
-    dashboard.getColumn(2).width = 18;
-    dashboard.getColumn(3).width = 18;
-    dashboard.getColumn(4).width = 18;
-    dashboard.getColumn(5).width = 18;
+    // F is intentionally a spacer.
+    sheet.getColumn(6).width = 8;
 
-    dashboard.getColumn(6).width = 8;
+    sheet.getColumn(7).width = 25;
+    sheet.getColumn(8).width = 18;
+    sheet.getColumn(9).width = 18;
+    sheet.getColumn(10).width = 18;
+    sheet.getColumn(11).width = 18;
 
-    dashboard.getColumn(7).width = 25;
-    dashboard.getColumn(8).width = 18;
-    dashboard.getColumn(9).width = 18;
-    dashboard.getColumn(10).width = 18;
-    dashboard.getColumn(11).width = 18;
-
-
-    // ========================================================
+    // --------------------------------------------------------
     // TITLE
-    // ========================================================
+    // --------------------------------------------------------
 
-    dashboard.mergeCells(
-        'A1:K1'
-    );
+    sheet.mergeCells('A1:K1');
 
+    const title = sheet.getCell('A1');
 
-    const title =
-        dashboard.getCell('A1');
+    title.value = 'WORK LOG DASHBOARD';
 
+    styleCell(title, {
+        bold: true,
+        size: 20,
+        horizontal: 'center',
+        fill: '1F4E78',
+        fontColor: 'FFFFFF'
+    });
 
-    title.value =
-        'WORK LOG DASHBOARD';
+    sheet.getRow(1).height = 40;
 
+    sheet.mergeCells('A2:K2');
 
-    styleCell(
-        title,
-        {
+    const subtitle = sheet.getCell('A2');
 
-            bold: true,
+    subtitle.value = workDate
+        ? `Report Date: ${workDate}`
+        : 'Report Period: All Available Work Logs';
 
-            size: 20,
+    styleCell(subtitle, {
+        horizontal: 'center',
+        fill: 'D9EAF7'
+    });
 
-            horizontal: 'center',
+    sheet.getRow(2).height = 26;
 
-            fill: '1F4E78',
-
-            fontColor: 'FFFFFF'
-
-        }
-    );
-
-
-    dashboard.getRow(1).height = 40;
-
-
-    dashboard.mergeCells(
-        'A2:K2'
-    );
-
-
-    const subtitle =
-        dashboard.getCell('A2');
-
-
-    subtitle.value =
-        workDate
-            ? `Report Date: ${workDate}`
-            : 'Report Period: All Available Work Logs';
-
-
-    styleCell(
-        subtitle,
-        {
-
-            horizontal: 'center',
-
-            fill: 'D9EAF7'
-
-        }
-    );
-
-
-    dashboard.getRow(2).height = 26;
-
-
-    // ========================================================
+    // --------------------------------------------------------
     // REPORT DETAILS
-    // ========================================================
+    // --------------------------------------------------------
 
     addSectionTitle(
-        dashboard,
+        sheet,
         4,
         1,
         11,
         'Report Details'
     );
 
-
     addTableHeader(
-        dashboard,
+        sheet,
         5,
         1,
         [
@@ -1306,134 +732,98 @@ const buildDashboard = async (
         ]
     );
 
-
-    dashboard.getCell(
-        6,
-        1
-    ).value =
-        workDate || 'All Dates';
-
-
-    dashboard.getCell(
-        6,
-        2
-    ).value =
-        search || 'All Records';
-
-
-    dashboard.getCell(
-        6,
-        3
-    ).value =
+    const details = [
+        workDate || 'All Dates',
+        search || 'All Records',
         sort === 'oldest'
             ? 'Oldest First'
-            : 'Newest First';
+            : 'Newest First'
+    ];
 
+    details.forEach((value, index) => {
+        const cell =
+            sheet.getCell(
+                6,
+                index + 1
+            );
 
-    styleCell(
-        dashboard.getCell(6, 1),
-        {
+        cell.value = value;
+
+        styleCell(cell, {
             horizontal: 'center'
-        }
-    );
+        });
+    });
 
+    sheet.getRow(6).height = 28;
 
-    styleCell(
-        dashboard.getCell(6, 2),
-        {
-            horizontal: 'center'
-        }
-    );
-
-
-    styleCell(
-        dashboard.getCell(6, 3),
-        {
-            horizontal: 'center'
-        }
-    );
-
-
-    dashboard.getRow(6).height = 28;
-
-
-    // ========================================================
+    // --------------------------------------------------------
     // AT A GLANCE
-    // ========================================================
+    // --------------------------------------------------------
 
     addSectionTitle(
-        dashboard,
+        sheet,
         9,
         1,
         11,
         'At a Glance'
     );
 
-
     addKpiCard(
-        dashboard,
+        sheet,
         1,
         10,
         'Work Entries',
         totalLogs
     );
 
-
     addKpiCard(
-        dashboard,
+        sheet,
         3,
         10,
         'Hours Logged',
         totalHours
     );
 
-
     addKpiCard(
-        dashboard,
+        sheet,
         5,
         10,
         'Employees Logged',
         loggedEmployeeCount
     );
 
-
     addKpiCard(
-        dashboard,
+        sheet,
         7,
         10,
         'Employees Not Logged',
         notLoggedEmployeeCount
     );
 
-
     addKpiCard(
-        dashboard,
+        sheet,
         9,
         10,
         'Projects',
         projectSet.size
     );
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // EMPLOYEE LOGGING STATUS
-    // ========================================================
+    // --------------------------------------------------------
 
     addSectionTitle(
-        dashboard,
+        sheet,
         14,
         1,
         11,
         'Employee Logging Status'
     );
 
-
-    // Extra height specifically for this section title.
-    dashboard.getRow(14).height = 34;
-
+    sheet.getRow(14).height = 34;
 
     addTableHeader(
-        dashboard,
+        sheet,
         15,
         1,
         [
@@ -1444,9 +834,7 @@ const buildDashboard = async (
         ]
     );
 
-
-    dashboard.getRow(15).height = 30;
-
+    sheet.getRow(15).height = 30;
 
     const loggingRate =
         activeEmployeeCount > 0
@@ -1459,116 +847,62 @@ const buildDashboard = async (
             )
             : 0;
 
-
-    const employeeStatusValues = [
-
+    [
         activeEmployeeCount,
-
         loggedEmployeeCount,
-
         notLoggedEmployeeCount,
-
         `${loggingRate}%`
-
-    ];
-
-
-    employeeStatusValues.forEach(
-        (value, index) => {
-
-            const cell =
-                dashboard.getCell(
-                    16,
-                    index + 1
-                );
-
-
-            cell.value =
-                value;
-
-
-            styleCell(
-                cell,
-                {
-
-                    bold: true,
-
-                    size: 12,
-
-                    horizontal: 'center',
-
-                    fill: 'F7F9FB'
-
-                }
+    ].forEach((value, index) => {
+        const cell =
+            sheet.getCell(
+                16,
+                index + 1
             );
 
-        }
-    );
+        cell.value = value;
 
+        styleCell(cell, {
+            bold: true,
+            size: 12,
+            horizontal: 'center',
+            fill: 'F7F9FB'
+        });
+    });
 
-    dashboard.getRow(16).height = 32;
+    sheet.getRow(16).height = 32;
 
-
-    // ========================================================
-    // EMPLOYEE STATUS NOTE
-    // ========================================================
-
-    dashboard.mergeCells(
-        'A17:K17'
-    );
-
+    sheet.mergeCells('A17:K17');
 
     const employeeNote =
-        dashboard.getCell(
-            'A17'
-        );
+        sheet.getCell('A17');
 
+    employeeNote.value = workDate
+        ? `Only active employees are checked. An employee is considered logged if at least one work log exists for ${workDate}.`
+        : 'Select a report date to determine exactly which active employees have not logged.';
 
-    employeeNote.value =
-        workDate
-            ? `Only active employees are checked. An employee is considered logged if at least one work log exists for ${workDate}.`
-            : 'Select a report date to determine exactly which active employees have not logged.';
+    styleCell(employeeNote, {
+        size: 10,
+        fontColor: '666666',
+        fill: 'F8FAFC'
+    });
 
+    sheet.getRow(17).height = 34;
+    sheet.getRow(18).height = 12;
 
-    styleCell(
-        employeeNote,
-        {
-
-            size: 10,
-
-            fontColor: '666666',
-
-            fill: 'F8FAFC'
-
-        }
-    );
-
-
-    dashboard.getRow(17).height = 34;
-
-
-    // ========================================================
-    // SPACING ROW
-    // ========================================================
-
-    dashboard.getRow(18).height = 12;
-
-
-    // ========================================================
+    // --------------------------------------------------------
     // WORKING HOURS
-    // ========================================================
+    // --------------------------------------------------------
 
     addSectionTitle(
-        dashboard,
+        sheet,
         19,
         1,
         11,
         'Working Hours'
     );
 
-
     addTableHeader(
-        dashboard,
+        sheet,
         20,
         1,
         [
@@ -1580,174 +914,105 @@ const buildDashboard = async (
         ]
     );
 
-
     const expectedHours =
         minutesToHours(
             capacityMinutes
         );
-
 
     const remainingHours =
         minutesToHours(
             remainingMinutes
         );
 
-
     const extraHours =
         minutesToHours(
             overtimeMinutes
         );
 
-
-    const workHoursValues = [
-
+    [
         `${expectedHours} hrs`,
-
         `${totalHours} hrs`,
-
         `${remainingHours} hrs`,
-
         `${extraHours} hrs`,
-
         `${utilization}%`
-
-    ];
-
-
-    workHoursValues.forEach(
-        (value, index) => {
-
-            const cell =
-                dashboard.getCell(
-                    21,
-                    index + 1
-                );
-
-
-            cell.value =
-                value;
-
-
-            styleCell(
-                cell,
-                {
-
-                    bold: true,
-
-                    size: 12,
-
-                    horizontal: 'center',
-
-                    fill: 'F7F9FB'
-
-                }
+    ].forEach((value, index) => {
+        const cell =
+            sheet.getCell(
+                21,
+                index + 1
             );
 
-        }
-    );
+        cell.value = value;
 
+        styleCell(cell, {
+            bold: true,
+            size: 12,
+            horizontal: 'center',
+            fill: 'F7F9FB'
+        });
+    });
 
-    dashboard.getRow(21).height = 32;
+    sheet.getRow(21).height = 32;
 
-
-    dashboard.mergeCells(
-        'A22:K22'
-    );
-
+    sheet.mergeCells('A22:K22');
 
     const hoursNote =
-        dashboard.getCell(
-            'A22'
-        );
-
+        sheet.getCell('A22');
 
     hoursNote.value =
         `Expected hours are based on 8 hours per workday (${workDatesSet.size} workday(s) in the report).`;
 
+    styleCell(hoursNote, {
+        size: 10,
+        fontColor: '666666',
+        fill: 'F8FAFC'
+    });
 
-    styleCell(
-        hoursNote,
-        {
+    sheet.getRow(22).height = 30;
+    sheet.getRow(23).height = 12;
 
-            size: 10,
-
-            fontColor: '666666',
-
-            fill: 'F8FAFC'
-
-        }
-    );
-
-
-    dashboard.getRow(22).height = 30;
-
-
-    dashboard.getRow(23).height = 12;
-
-
-    // ========================================================
-    // CHART SECTION
-    // ========================================================
+    // --------------------------------------------------------
+    // CHARTS
+    // --------------------------------------------------------
 
     addSectionTitle(
-        dashboard,
+        sheet,
         24,
         1,
         11,
         'Where the Time Was Spent'
     );
 
-
-    let workTypeChartBuffer = null;
-    let projectChartBuffer = null;
-
+    let workTypeChart = null;
+    let projectChart = null;
 
     try {
-
-        workTypeChartBuffer =
+        workTypeChart =
             await createWorkTypeChart(
                 workTypeSummary
             );
 
-
-        projectChartBuffer =
+        projectChart =
             await createProjectChart(
                 projectSummary
             );
-
-    } catch (chartError) {
-
+    } catch (err) {
         console.error(
             'Chart generation error:',
-            chartError
+            err
         );
-
     }
 
-
-    // ========================================================
-    // LEFT CHART
-    // A-E
-    // ========================================================
-
-    if (workTypeChartBuffer) {
-
+    if (workTypeChart) {
         const imageId =
             workbook.addImage({
-
-                buffer:
-                    workTypeChartBuffer,
-
-                extension:
-                    'png'
-
+                buffer: workTypeChart,
+                extension: 'png'
             });
 
-
-        dashboard.addImage(
+        sheet.addImage(
             imageId,
             {
-
                 tl: {
                     col: 0,
                     row: 24
@@ -1757,62 +1022,34 @@ const buildDashboard = async (
                     width: 500,
                     height: 280
                 }
-
             }
         );
-
     } else {
-
-        dashboard.mergeCells(
-            'A26:E26'
-        );
-
+        sheet.mergeCells('A26:E26');
 
         const cell =
-            dashboard.getCell(
-                'A26'
-            );
-
+            sheet.getCell('A26');
 
         cell.value =
             workTypeSummary.length
                 ? 'Work Type chart unavailable'
                 : 'No work type data available';
 
-
-        styleCell(
-            cell,
-            {
-                horizontal: 'center'
-            }
-        );
-
+        styleCell(cell, {
+            horizontal: 'center'
+        });
     }
 
-
-    // ========================================================
-    // RIGHT CHART
-    // G-K
-    // ========================================================
-
-    if (projectChartBuffer) {
-
+    if (projectChart) {
         const imageId =
             workbook.addImage({
-
-                buffer:
-                    projectChartBuffer,
-
-                extension:
-                    'png'
-
+                buffer: projectChart,
+                extension: 'png'
             });
 
-
-        dashboard.addImage(
+        sheet.addImage(
             imageId,
             {
-
                 tl: {
                     col: 6,
                     row: 24
@@ -1822,72 +1059,48 @@ const buildDashboard = async (
                     width: 470,
                     height: 280
                 }
-
             }
         );
-
     } else {
-
-        dashboard.mergeCells(
-            'G26:K26'
-        );
-
+        sheet.mergeCells('G26:K26');
 
         const cell =
-            dashboard.getCell(
-                'G26'
-            );
-
+            sheet.getCell('G26');
 
         cell.value =
             projectSummary.length
                 ? 'Project chart unavailable'
                 : 'No project data available';
 
-
-        styleCell(
-            cell,
-            {
-                horizontal: 'center'
-            }
-        );
-
+        styleCell(cell, {
+            horizontal: 'center'
+        });
     }
-
-
-    // Reserve enough visual space for charts.
 
     for (
         let row = 25;
         row <= 38;
         row++
     ) {
-
-        dashboard.getRow(
-            row
-        ).height = 22;
-
+        sheet.getRow(row).height = 22;
     }
 
+    sheet.getRow(39).height = 12;
 
-    dashboard.getRow(39).height = 12;
-
-
-    // ========================================================
+    // --------------------------------------------------------
     // KEY INSIGHTS
-    // ========================================================
+    // --------------------------------------------------------
 
     addSectionTitle(
-        dashboard,
+        sheet,
         40,
         1,
         11,
         'Key Insights'
     );
 
-
     addTableHeader(
-        dashboard,
+        sheet,
         41,
         1,
         [
@@ -1897,186 +1110,127 @@ const buildDashboard = async (
         ]
     );
 
-
     const topProject =
         projectSummary[0];
-
 
     const topWorkType =
         workTypeSummary[0];
 
-
     const topActivity =
         activitySummary[0];
-
 
     let hoursStatus =
         'No hours logged';
 
-
     if (totalHours > expectedHours) {
-
         hoursStatus =
             'Above expected hours';
-
     } else if (
         totalHours === expectedHours &&
         expectedHours > 0
     ) {
-
         hoursStatus =
             'Expected hours completed';
-
     } else if (totalHours > 0) {
-
         hoursStatus =
             'Below expected hours';
-
     }
 
-
     const findings = [
-
         [
             'Project with Most Hours',
-
             topProject
                 ? topProject.name
                 : 'No data',
-
             topProject
                 ? `${topProject.hours} hrs`
                 : '0 hrs'
         ],
 
-
         [
             'Work Type Used Most',
-
             topWorkType
                 ? topWorkType.name
                 : 'No data',
-
             topWorkType
                 ? `${topWorkType.hours} hrs`
                 : '0 hrs'
         ],
 
-
         [
             'Most Logged Activity',
-
             topActivity
                 ? topActivity.name
                 : 'No data',
-
             topActivity
                 ? `${topActivity.logs} entries`
                 : '0 entries'
         ],
 
-
         [
             'Working Hours Status',
-
             hoursStatus,
-
             `${totalHours} / ${expectedHours} hrs`
         ]
-
     ];
-
 
     findings.forEach(
         (values, index) => {
-
-            const row =
-                42 + index;
-
+            const row = 42 + index;
 
             values.forEach(
                 (value, columnIndex) => {
-
                     const cell =
-                        dashboard.getCell(
+                        sheet.getCell(
                             row,
                             columnIndex + 1
                         );
 
+                    cell.value = value;
 
-                    cell.value =
-                        value;
-
-
-                    styleCell(
-                        cell,
-                        {
-
-                            bold:
-                                columnIndex === 0,
-
-                            horizontal:
-                                columnIndex === 2
-                                    ? 'center'
-                                    : 'left'
-
-                        }
-                    );
-
+                    styleCell(cell, {
+                        bold:
+                            columnIndex === 0,
+                        horizontal:
+                            columnIndex === 2
+                                ? 'center'
+                                : 'left'
+                    });
                 }
             );
 
-            dashboard.getRow(row).height = 27;
-
+            sheet.getRow(row).height = 27;
         }
     );
 
+    // --------------------------------------------------------
+    // DASHBOARD PRINT SETTINGS
+    // --------------------------------------------------------
 
-    // ========================================================
-    // DASHBOARD SETTINGS
-    // ========================================================
-
-    dashboard.views = [
-
+    sheet.views = [
         {
             state: 'frozen',
             ySplit: 2
         }
-
     ];
 
-
-    dashboard.pageSetup = {
-
+    sheet.pageSetup = {
         orientation: 'landscape',
-
+        paperSize: 9,
         fitToPage: true,
-
         fitToWidth: 1,
-
         fitToHeight: 0
-
     };
 
-
-    dashboard.pageMargins = {
-
+    sheet.pageMargins = {
         left: 0.25,
-
         right: 0.25,
-
         top: 0.5,
-
         bottom: 0.5,
-
         header: 0.2,
-
         footer: 0.2
-
     };
-
 };
-
 
 // ============================================================
 // NOT LOGGED SHEET
@@ -2087,136 +1241,61 @@ const buildNotLoggedSheet = (
     employees,
     workDate
 ) => {
-
-    // ========================================================
-    // COLUMN WIDTHS
-    // ========================================================
-
     sheet.getColumn(1).width = 10;
     sheet.getColumn(2).width = 20;
     sheet.getColumn(3).width = 32;
     sheet.getColumn(4).width = 28;
 
-
-    // ========================================================
-    // TITLE
-    // ========================================================
-
-    sheet.mergeCells(
-        'A1:D1'
-    );
-
+    sheet.mergeCells('A1:D1');
 
     const title =
         sheet.getCell('A1');
 
-
     title.value =
         'EMPLOYEES NOT LOGGED';
 
-
-    styleCell(
-        title,
-        {
-
-            bold: true,
-
-            size: 18,
-
-            horizontal: 'center',
-
-            fill: '1F4E78',
-
-            fontColor: 'FFFFFF'
-
-        }
-    );
-
+    styleCell(title, {
+        bold: true,
+        size: 18,
+        horizontal: 'center',
+        fill: '1F4E78',
+        fontColor: 'FFFFFF'
+    });
 
     sheet.getRow(1).height = 38;
 
-
-    // ========================================================
-    // DATE
-    // ========================================================
-
-    sheet.mergeCells(
-        'A2:D2'
-    );
-
+    sheet.mergeCells('A2:D2');
 
     const dateCell =
         sheet.getCell('A2');
 
-
     dateCell.value =
         `Work Date: ${workDate}`;
 
-
-    styleCell(
-        dateCell,
-        {
-
-            horizontal: 'center',
-
-            fill: 'D9EAF7'
-
-        }
-    );
-
+    styleCell(dateCell, {
+        horizontal: 'center',
+        fill: 'D9EAF7'
+    });
 
     sheet.getRow(2).height = 26;
-
-
-    // ========================================================
-    // SPACING
-    // ========================================================
-
     sheet.getRow(3).height = 10;
 
-
-    // ========================================================
-    // COUNT
-    // ========================================================
-
-    sheet.mergeCells(
-        'A4:D4'
-    );
-
+    sheet.mergeCells('A4:D4');
 
     const countCell =
         sheet.getCell('A4');
 
-
     countCell.value =
         `Active employees who have not logged: ${employees.length}`;
 
-
-    styleCell(
-        countCell,
-        {
-
-            bold: true,
-
-            size: 12,
-
-            horizontal: 'left',
-
-            fill: 'F7F9FB'
-
-        }
-    );
-
+    styleCell(countCell, {
+        bold: true,
+        size: 12,
+        fill: 'F7F9FB'
+    });
 
     sheet.getRow(4).height = 30;
-
-
     sheet.getRow(5).height = 10;
-
-
-    // ========================================================
-    // HEADER
-    // ========================================================
 
     addTableHeader(
         sheet,
@@ -2230,13 +1309,7 @@ const buildNotLoggedSheet = (
         ]
     );
 
-
-    // ========================================================
-    // EMPTY STATE
-    // ========================================================
-
     if (!employees.length) {
-
         addEmptyTableMessage(
             sheet,
             7,
@@ -2244,148 +1317,242 @@ const buildNotLoggedSheet = (
             4,
             'All active employees have logged for this date'
         );
-
     } else {
-
-        // ====================================================
-        // ROWS
-        // ====================================================
-
         employees.forEach(
             (employee, index) => {
-
-                const row =
-                    7 + index;
-
+                const row = 7 + index;
 
                 const values = [
-
                     index + 1,
-
                     employee.employee_id || '',
-
                     employee.employee_name || '',
-
                     employee.department_name || ''
-
                 ];
-
 
                 values.forEach(
                     (value, columnIndex) => {
-
                         const cell =
                             sheet.getCell(
                                 row,
                                 columnIndex + 1
                             );
 
+                        cell.value = value;
 
-                        cell.value =
-                            value;
-
-
-                        styleCell(
-                            cell,
-                            {
-
-                                horizontal:
-                                    columnIndex === 0
-                                        ? 'center'
-                                        : 'left'
-
-                            }
-                        );
-
+                        styleCell(cell, {
+                            horizontal:
+                                columnIndex === 0
+                                    ? 'center'
+                                    : 'left'
+                        });
                     }
                 );
 
-
                 if (row % 2 === 1) {
-
                     for (
                         let col = 1;
                         col <= 4;
                         col++
                     ) {
-
                         sheet.getCell(
                             row,
                             col
                         ).fill = {
-
                             type: 'pattern',
-
                             pattern: 'solid',
-
-                            fgColor: 'F8FAFC'
-
+                            fgColor: {
+                                argb: 'F8FAFC'
+                            }
                         };
-
                     }
-
                 }
 
+                sheet.getRow(row).height = 24;
             }
         );
-
     }
 
-
-    // ========================================================
-    // SETTINGS
-    // ========================================================
-
     sheet.views = [
-
         {
             state: 'frozen',
             ySplit: 6
         }
-
     ];
 
-
     sheet.autoFilter = {
-
         from: 'A6',
-
         to: 'D6'
-
     };
-
 
     sheet.pageSetup = {
-
         orientation: 'landscape',
-
+        paperSize: 9,
         fitToPage: true,
-
         fitToWidth: 1,
-
         fitToHeight: 0
-
     };
-
 
     sheet.pageMargins = {
-
         left: 0.25,
-
         right: 0.25,
-
         top: 0.5,
-
         bottom: 0.5,
-
         header: 0.2,
-
         footer: 0.2
-
     };
-
 };
 
+// ============================================================
+// GET ALL WORK LOGS
+// ============================================================
+
+exports.getAllWorkLogs = async (
+    req,
+    res
+) => {
+    const {
+        search = '',
+        page = 1,
+        limit = 10,
+        sort = 'newest',
+        workDate = ''
+    } = req.query;
+
+    try {
+        const result =
+            await workLogsModel.getAllWorkLogs(
+                search,
+                Number(page),
+                Number(limit),
+                sort,
+                workDate
+            );
+
+        return res.status(200).json({
+            success: true,
+
+            data:
+                Array.isArray(result.rows)
+                    ? result.rows
+                    : [],
+
+            pagination: {
+                page: Number(page),
+                limit: Number(limit),
+
+                totalPages:
+                    Math.ceil(
+                        result.total /
+                        Number(limit)
+                    ),
+
+                totalRecords:
+                    result.total
+            }
+        });
+    } catch (err) {
+        console.error(
+            'Get All Work Logs Error:',
+            err
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: 'Please try again later'
+        });
+    }
+};
+
+// ============================================================
+// TODAY SUMMARY
+// ============================================================
+
+exports.getTodaySummary = async (
+    req,
+    res
+) => {
+    const { employee_id } =
+        req.params;
+
+    if (!employee_id) {
+        return res.status(400).json({
+            success: false,
+            message: 'Employee ID is required'
+        });
+    }
+
+    try {
+        const summary =
+            await workLogsModel.getTodaySummary(
+                employee_id
+            );
+
+        return res.status(200).json({
+            success: true,
+            data: summary
+        });
+    } catch (err) {
+        console.error(
+            'Today Summary Error:',
+            err
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: 'Please try again later!'
+        });
+    }
+};
+
+// ============================================================
+// GET EMPLOYEES NOT LOGGED
+// ============================================================
+
+exports.getEmployeesNotLogged = async (
+    req,
+    res
+) => {
+    const {
+        workDate = ''
+    } = req.query;
+
+    if (!workDate) {
+        return res.status(400).json({
+            success: false,
+            message: 'Work date is required'
+        });
+    }
+
+    try {
+        const employees =
+            await workLogsModel.getEmployeesNotLogged(
+                workDate
+            );
+
+        const result =
+            Array.isArray(employees)
+                ? employees
+                : [];
+
+        return res.status(200).json({
+            success: true,
+            data: result,
+            count: result.length,
+            workDate
+        });
+    } catch (err) {
+        console.error(
+            'Get Employees Not Logged Error:',
+            err
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                'Failed to get employees who have not logged'
+        });
+    }
+};
 
 // ============================================================
 // DOWNLOAD WORK LOGS
@@ -2395,47 +1562,38 @@ exports.downloadWorkLogs = async (
     req,
     res
 ) => {
-
     try {
-
         const search =
             req.query.search || '';
-
 
         const sort =
             req.query.sort || 'newest';
 
-
         const workDate =
             req.query.workDate || '';
-
 
         console.log(
             '========== EXCEL DOWNLOAD =========='
         );
-
 
         console.log(
             'search:',
             search
         );
 
-
         console.log(
             'sort:',
             sort
         );
-
 
         console.log(
             'workDate:',
             workDate
         );
 
-
-        // ====================================================
+        // ----------------------------------------------------
         // GET WORK LOGS
-        // ====================================================
+        // ----------------------------------------------------
 
         const worklogsResult =
             await workLogsModel.downloadWorkLogs(
@@ -2444,7 +1602,13 @@ exports.downloadWorkLogs = async (
                 workDate
             );
 
-
+        /*
+         * IMPORTANT:
+         * Your model returns rows directly.
+         *
+         * Keep support for both array and { rows } just in
+         * case, but do not change the model API.
+         */
         const worklogs =
             Array.isArray(worklogsResult)
                 ? worklogsResult
@@ -2454,49 +1618,35 @@ exports.downloadWorkLogs = async (
                     ? worklogsResult.rows
                     : [];
 
-
         console.log(
             'WORKLOG COUNT:',
             worklogs.length
         );
 
-
-        // ====================================================
-        // GET NOT LOGGED EMPLOYEES
-        // ====================================================
+        // ----------------------------------------------------
+        // NOT LOGGED EMPLOYEES
+        // ----------------------------------------------------
 
         let notLoggedEmployees = [];
 
-
         if (workDate) {
-
             const result =
                 await workLogsModel.getEmployeesNotLogged(
                     workDate
                 );
 
-
             notLoggedEmployees =
                 Array.isArray(result)
                     ? result
                     : [];
-
         }
 
-
-        console.log(
-            'NOT LOGGED COUNT:',
-            notLoggedEmployees.length
-        );
-
-
-        // ====================================================
-        // TOTAL HOURS
-        // ====================================================
+        // ----------------------------------------------------
+        // TOTALS
+        // ----------------------------------------------------
 
         const totalLogs =
             worklogs.length;
-
 
         const totalMinutes =
             worklogs.reduce(
@@ -2508,35 +1658,31 @@ exports.downloadWorkLogs = async (
                 0
             );
 
-
         const totalHours =
             minutesToHours(
                 totalMinutes
             );
 
-
-        // ====================================================
+        // ----------------------------------------------------
         // UNIQUE EMPLOYEES
-        // ====================================================
+        // ----------------------------------------------------
 
         const employeeSet =
             new Set(
                 worklogs
-                    .map(
-                        row =>
-                            row.employee_id
-                                ? String(
-                                    row.employee_id
-                                )
-                                : row.employee_name
+                    .map((row) =>
+                        row.employee_id
+                            ? String(
+                                row.employee_id
+                            )
+                            : row.employee_name
                     )
                     .filter(Boolean)
             );
 
-
-        // ====================================================
-        // OTHER UNIQUE COUNTS
-        // ====================================================
+        // ----------------------------------------------------
+        // UNIQUE PROJECTS
+        // ----------------------------------------------------
 
         const projectSet =
             new Set(
@@ -2548,6 +1694,9 @@ exports.downloadWorkLogs = async (
                     .filter(Boolean)
             );
 
+        // ----------------------------------------------------
+        // UNIQUE WORK TYPES
+        // ----------------------------------------------------
 
         const workTypeSet =
             new Set(
@@ -2559,67 +1708,55 @@ exports.downloadWorkLogs = async (
                     .filter(Boolean)
             );
 
-
-        // ====================================================
+        // ----------------------------------------------------
         // WORK DATES
-        // ====================================================
+        // ----------------------------------------------------
 
         const workDatesSet =
             getUniqueWorkDates(
                 worklogs
             );
 
+        /*
+         * If a work date was explicitly selected but there are
+         * no rows, still treat that selected date as one
+         * workday for capacity calculations.
+         */
+        if (
+            workDate &&
+            worklogs.length === 0
+        ) {
+            workDatesSet.add(workDate);
+        }
 
-        // ====================================================
+        // ----------------------------------------------------
         // EMPLOYEE LOGGING STATUS
-        // ====================================================
+        // ----------------------------------------------------
+
+        const loggedEmployeeCount =
+            employeeSet.size;
+
+        const notLoggedEmployeeCount =
+            notLoggedEmployees.length;
 
         let activeEmployeeCount = 0;
 
-        let loggedEmployeeCount =
-            employeeSet.size;
-
-        let notLoggedEmployeeCount =
-            notLoggedEmployees.length;
-
-
         if (workDate) {
-
             activeEmployeeCount =
                 loggedEmployeeCount +
                 notLoggedEmployeeCount;
-
-        } else {
-
-            // Without a selected date, there is no
-            // meaningful "not logged" comparison.
-
-            activeEmployeeCount = 0;
-
-            loggedEmployeeCount =
-                employeeSet.size;
-
-            notLoggedEmployeeCount = 0;
-
         }
 
-
-        // ====================================================
+        // ----------------------------------------------------
         // CAPACITY
-        // ====================================================
+        // ----------------------------------------------------
 
         const standardMinutes =
             8 * 60;
 
-
-        const numberOfWorkdays =
-            workDatesSet.size;
-
-
         const capacityMinutes =
-            numberOfWorkdays *
+            workDatesSet.size *
             standardMinutes;
-
 
         const remainingMinutes =
             Math.max(
@@ -2628,14 +1765,12 @@ exports.downloadWorkLogs = async (
                 0
             );
 
-
         const overtimeMinutes =
             Math.max(
                 totalMinutes -
                 capacityMinutes,
                 0
             );
-
 
         const utilization =
             capacityMinutes > 0
@@ -2648,10 +1783,9 @@ exports.downloadWorkLogs = async (
                 )
                 : 0;
 
-
-        // ====================================================
+        // ----------------------------------------------------
         // SUMMARIES
-        // ====================================================
+        // ----------------------------------------------------
 
         const employeeSummary =
             createSummary(
@@ -2660,14 +1794,12 @@ exports.downloadWorkLogs = async (
                 totalMinutes
             );
 
-
         const departmentSummary =
             createSummary(
                 worklogs,
                 'department_name',
                 totalMinutes
             );
-
 
         const projectSummary =
             createSummary(
@@ -2676,14 +1808,12 @@ exports.downloadWorkLogs = async (
                 totalMinutes
             );
 
-
         const activitySummary =
             createSummary(
                 worklogs,
                 'activity_name',
                 totalMinutes
             );
-
 
         const workTypeSummary =
             createSummary(
@@ -2692,380 +1822,267 @@ exports.downloadWorkLogs = async (
                 totalMinutes
             );
 
-
-        // ====================================================
+        // ----------------------------------------------------
         // WORKBOOK
-        // ====================================================
+        // ----------------------------------------------------
 
         const workbook =
             new ExcelJS.Workbook();
 
-
         workbook.creator =
             'Work Log Management';
-
 
         workbook.lastModifiedBy =
             'Work Log Management';
 
-
         workbook.createdAt =
             new Date();
-
 
         workbook.modifiedAt =
             new Date();
 
-
-        // ====================================================
-        // WORKSHEETS
-        // ====================================================
+        // ----------------------------------------------------
+        // SHEETS
+        // ----------------------------------------------------
 
         const dashboard =
             workbook.addWorksheet(
                 'Dashboard'
             );
 
-
         const logsSheet =
             workbook.addWorksheet(
                 'Work Logs'
             );
-
 
         const notLoggedSheet =
             workbook.addWorksheet(
                 'Not Logged'
             );
 
-
         const employeeSheet =
             workbook.addWorksheet(
                 'Employee Summary'
             );
-
 
         const departmentSheet =
             workbook.addWorksheet(
                 'Department Summary'
             );
 
-
         const projectSheet =
             workbook.addWorksheet(
                 'Project Summary'
             );
-
 
         const activitySheet =
             workbook.addWorksheet(
                 'Activity Summary'
             );
 
-
         const workTypeSheet =
             workbook.addWorksheet(
                 'Work Type Summary'
             );
 
-
-        // ====================================================
-        // BUILD DASHBOARD
-        // ====================================================
+        // ----------------------------------------------------
+        // DASHBOARD
+        // ----------------------------------------------------
 
         await buildDashboard(
             dashboard,
             {
-
                 search,
-
                 sort,
-
                 workDate,
 
                 totalLogs,
-
                 totalMinutes,
-
                 totalHours,
 
                 employeeSet,
-
                 projectSet,
-
                 workTypeSet,
-
                 workDatesSet,
 
-                departmentSummary,
-
                 projectSummary,
-
                 activitySummary,
-
                 workTypeSummary,
 
                 capacityMinutes,
-
                 remainingMinutes,
-
                 overtimeMinutes,
-
                 utilization,
 
                 activeEmployeeCount,
-
                 loggedEmployeeCount,
-
                 notLoggedEmployeeCount
-
             },
             workbook
         );
 
-
-        // ====================================================
-        // BUILD NOT LOGGED SHEET
-        // ====================================================
+        // ----------------------------------------------------
+        // NOT LOGGED
+        // ----------------------------------------------------
 
         if (workDate) {
-
             buildNotLoggedSheet(
                 notLoggedSheet,
                 notLoggedEmployees,
                 workDate
             );
-
         } else {
-
             notLoggedSheet.getColumn(1).width = 20;
             notLoggedSheet.getColumn(2).width = 60;
-
 
             notLoggedSheet.mergeCells(
                 'A1:B1'
             );
 
-
             const cell =
-                notLoggedSheet.getCell('A1');
-
+                notLoggedSheet.getCell(
+                    'A1'
+                );
 
             cell.value =
                 'NOT LOGGED EMPLOYEES';
 
-
-            styleCell(
-                cell,
-                {
-
-                    bold: true,
-
-                    size: 18,
-
-                    horizontal: 'center',
-
-                    fill: '1F4E78',
-
-                    fontColor: 'FFFFFF'
-
-                }
-            );
-
+            styleCell(cell, {
+                bold: true,
+                size: 18,
+                horizontal: 'center',
+                fill: '1F4E78',
+                fontColor: 'FFFFFF'
+            });
 
             notLoggedSheet.getRow(1).height = 38;
-
 
             notLoggedSheet.mergeCells(
                 'A3:B3'
             );
 
-
             const message =
-                notLoggedSheet.getCell('A3');
-
+                notLoggedSheet.getCell(
+                    'A3'
+                );
 
             message.value =
                 'Please select a Work Date to determine which active employees have not logged.';
 
-
-            styleCell(
-                message,
-                {
-
-                    horizontal: 'center',
-
-                    fill: 'F7F9FB'
-
-                }
-            );
-
+            styleCell(message, {
+                horizontal: 'center',
+                fill: 'F7F9FB'
+            });
 
             notLoggedSheet.getRow(3).height = 30;
-
         }
 
-
         // ====================================================
-        // WORK LOG SHEET
+        // WORK LOGS SHEET
         // ====================================================
 
         logsSheet.columns = [
-
             {
                 header: 'Sl No',
                 key: 'slNo',
-                width: 10
+                width: 8
             },
-
             {
                 header: 'Date',
                 key: 'date',
-                width: 15
+                width: 14
             },
-
             {
                 header: 'Employee',
                 key: 'employee',
-                width: 25
+                width: 24
             },
-
             {
                 header: 'Entered By Employee',
                 key: 'enteredBy',
-                width: 25
+                width: 24
             },
-
             {
                 header: 'Department',
                 key: 'department',
-                width: 22
+                width: 20
             },
-
             {
                 header: 'Project',
                 key: 'project',
-                width: 28
+                width: 25
             },
-
             {
                 header: 'Activity',
                 key: 'activity',
-                width: 28
+                width: 25
             },
-
             {
                 header: 'Sub Activity',
                 key: 'subActivity',
-                width: 28
+                width: 25
             },
-
             {
                 header: 'Work Type',
                 key: 'workType',
-                width: 22
+                width: 20
             },
-
             {
                 header: 'Duration',
                 key: 'duration',
-                width: 15
+                width: 13
             },
-
             {
                 header: 'Duration Hours',
                 key: 'durationHours',
-                width: 18
+                width: 16
             },
-
             {
                 header: 'Remarks',
                 key: 'remarks',
-                width: 40
+                width: 35
             }
-
         ];
 
-
-        // ====================================================
-        // ADD WORK LOG ROWS
-        // ====================================================
+        // ----------------------------------------------------
+        // ADD LOG ROWS
+        // ----------------------------------------------------
 
         worklogs.forEach(
             (worklog, index) => {
-
-                let workDateValue = '';
-
-
-                if (
-                    worklog.work_date
-                ) {
-
-                    const dateKey =
-                        getDateKey(
-                            worklog.work_date
-                        );
-
-
-                    if (dateKey) {
-
-                        const parsedDate =
-                            new Date(
-                                `${dateKey}T00:00:00`
-                            );
-
-
-                        if (
-                            !Number.isNaN(
-                                parsedDate.getTime()
-                            )
-                        ) {
-
-                            workDateValue =
-                                parsedDate;
-
-                        }
-
-                    }
-
-                }
-
-
                 logsSheet.addRow({
+                    slNo: index + 1,
 
-                    slNo:
-                        index + 1,
-
+                    /*
+                     * IMPORTANT:
+                     * This is now a string such as 15-09-2026.
+                     * It cannot be shifted by timezone conversion.
+                     */
                     date:
-                        workDateValue,
+                        getExcelDate(
+                            worklog.work_date
+                        ),
 
                     employee:
-                        worklog.employee_name ||
-                        '',
+                        worklog.employee_name || '',
 
                     enteredBy:
-                        worklog.entered_by_employee_name ||
-                        '',
+                        worklog.entered_by_employee_name || '',
 
                     department:
-                        worklog.department_name ||
-                        '',
+                        worklog.department_name || '',
 
                     project:
-                        worklog.project_name ||
-                        '',
+                        worklog.project_name || '',
 
                     activity:
-                        worklog.activity_name ||
-                        '',
+                        worklog.activity_name || '',
 
                     subActivity:
-                        worklog.sub_activity_name ||
-                        '',
+                        worklog.sub_activity_name || '',
 
                     workType:
-                        worklog.work_type_name ||
-                        '',
+                        worklog.work_type_name || '',
 
                     duration:
                         formatMinutes(
@@ -3078,159 +2095,148 @@ exports.downloadWorkLogs = async (
                         ),
 
                     remarks:
-                        worklog.remarks ||
-                        ''
-
+                        worklog.remarks || ''
                 });
-
             }
         );
 
-
-        // ====================================================
-        // WORK LOG HEADER
-        // ====================================================
+        // ----------------------------------------------------
+        // HEADER
+        // ----------------------------------------------------
 
         for (
             let col = 1;
             col <= 12;
             col++
         ) {
-
             styleCell(
                 logsSheet.getCell(
                     1,
                     col
                 ),
                 {
-
                     bold: true,
-
                     horizontal: 'center',
-
-                    fill: 'D9E2F3'
-
+                    fill: 'D9E2F3',
+                    wrapText: true
                 }
             );
-
         }
 
+        logsSheet.getRow(1).height = 30;
 
-        logsSheet.getRow(1).height = 28;
-
-
-        logsSheet.getColumn(2).numFmt =
-            'dd-mm-yyyy';
-
-
-        // ====================================================
-        // WORK LOG BODY
-        // ====================================================
+        // ----------------------------------------------------
+        // BODY
+        // ----------------------------------------------------
 
         for (
-            let row = 2;
-            row <= logsSheet.rowCount;
-            row++
+            let rowNumber = 2;
+            rowNumber <= logsSheet.rowCount;
+            rowNumber++
         ) {
-
             for (
                 let col = 1;
                 col <= 12;
                 col++
             ) {
-
-                styleCell(
+                const cell =
                     logsSheet.getCell(
-                        row,
+                        rowNumber,
                         col
-                    )
-                );
+                    );
 
+                const centered =
+                    col === 1 ||
+                    col === 2 ||
+                    col === 10 ||
+                    col === 11;
+
+                styleCell(cell, {
+                    horizontal:
+                        centered
+                            ? 'center'
+                            : 'left',
+
+                    wrapText:
+                        col === 12
+                });
             }
 
+            /*
+             * Do NOT apply Excel date numFmt here.
+             * Column 2 is intentionally a string date.
+             */
 
-            if (
-                row % 2 === 0
-            ) {
-
+            if (rowNumber % 2 === 0) {
                 for (
                     let col = 1;
                     col <= 12;
                     col++
                 ) {
-
                     logsSheet.getCell(
-                        row,
+                        rowNumber,
                         col
                     ).fill = {
-
                         type: 'pattern',
-
                         pattern: 'solid',
-
-                        fgColor: 'F8FAFC'
-
+                        fgColor: {
+                            argb: 'F8FAFC'
+                        }
                     };
-
                 }
-
             }
 
+            logsSheet.getRow(
+                rowNumber
+            ).height = 24;
         }
 
-
-        // ====================================================
-        // WORK LOG SETTINGS
-        // ====================================================
+        // ----------------------------------------------------
+        // WORK LOG PRINT SETTINGS
+        // ----------------------------------------------------
 
         logsSheet.views = [
-
             {
                 state: 'frozen',
                 ySplit: 1
             }
-
         ];
 
+        logsSheet.properties.defaultRowHeight = 22;
 
         logsSheet.autoFilter = {
-
             from: 'A1',
-
             to: 'L1'
-
         };
-
 
         logsSheet.pageSetup = {
-
             orientation: 'landscape',
+            paperSize: 9,
 
-            fitToPage: true,
+            fitToPage: false,
+            fitToWidth: 0,
+            fitToHeight: 0,
 
-            fitToWidth: 1,
-
-            fitToHeight: 0
-
+            horizontalDpi: 300,
+            verticalDpi: 300
         };
-
 
         logsSheet.pageMargins = {
-
             left: 0.25,
-
             right: 0.25,
-
             top: 0.5,
-
             bottom: 0.5,
-
             header: 0.2,
-
             footer: 0.2
-
         };
 
+        logsSheet.printTitlesRow =
+            '1:1';
+
+        if (logsSheet.rowCount > 1) {
+            logsSheet.printArea =
+                `A1:L${logsSheet.rowCount}`;
+        }
 
         // ====================================================
         // SUMMARY SHEETS
@@ -3238,167 +2244,146 @@ exports.downloadWorkLogs = async (
 
         addSummaryTable(
             employeeSheet,
-            1,
-            1,
             'Employee Summary',
             employeeSummary
         );
 
-
         addSummaryTable(
             departmentSheet,
-            1,
-            1,
             'Department Summary',
             departmentSummary
         );
 
-
         addSummaryTable(
             projectSheet,
-            1,
-            1,
             'Project Summary',
             projectSummary
         );
 
-
         addSummaryTable(
             activitySheet,
-            1,
-            1,
             'Activity Summary',
             activitySummary
         );
 
-
         addSummaryTable(
             workTypeSheet,
-            1,
-            1,
             'Work Type Summary',
             workTypeSummary
         );
 
-
-        // ====================================================
-        // SUMMARY SHEET SETTINGS
-        // ====================================================
+        // ----------------------------------------------------
+        // SUMMARY SETTINGS
+        // ----------------------------------------------------
 
         const summarySheets = [
-
             employeeSheet,
-
             departmentSheet,
-
             projectSheet,
-
             activitySheet,
-
             workTypeSheet
-
         ];
 
-
         summarySheets.forEach(
-            sheet => {
-
+            (sheet) => {
                 sheet.views = [
-
                     {
                         state: 'frozen',
                         ySplit: 2
                     }
-
                 ];
 
-
                 sheet.autoFilter = {
-
                     from: 'A2',
-
                     to: 'F2'
-
                 };
-
 
                 sheet.getColumn(1).width = 30;
-
                 sheet.getColumn(2).width = 12;
-
                 sheet.getColumn(3).width = 15;
-
                 sheet.getColumn(4).width = 15;
-
                 sheet.getColumn(5).width = 15;
-
                 sheet.getColumn(6).width = 18;
 
-
                 sheet.pageSetup = {
-
                     orientation: 'landscape',
-
+                    paperSize: 9,
                     fitToPage: true,
-
                     fitToWidth: 1,
-
                     fitToHeight: 0
-
                 };
-
 
                 sheet.pageMargins = {
-
                     left: 0.25,
-
                     right: 0.25,
-
                     top: 0.5,
-
                     bottom: 0.5,
-
                     header: 0.2,
-
                     footer: 0.2
-
                 };
-
             }
         );
 
-
         // ====================================================
-        // RESPONSE
+        // WRITE FILE
         // ====================================================
 
-        const filename =
-            workDate
-                ? `work_logs_report_${workDate}.xlsx`
-                : 'work_logs_report.xlsx';
+        /*
+         * Requested filename:
+         *
+         * work_logs_report_15-09-2026.xlsx
+         *
+         * Frontend can also use its own filename, but this header
+         * is the correct backend filename.
+         */
+        const filename = (() => {
+            if (!workDate) {
+                return 'work_logs_report.xlsx';
+            }
 
+            const match =
+                String(workDate).match(
+                    /^(\d{4})-(\d{2})-(\d{2})$/
+                );
+
+            if (match) {
+                const [
+                    ,
+                    year,
+                    month,
+                    day
+                ] = match;
+
+                return `work_logs_report_${day}-${month}-${year}.xlsx`;
+            }
+
+            const safeDate =
+                String(workDate)
+                    .replace(
+                        /[^0-9A-Za-z_-]/g,
+                        '-'
+                    );
+
+            return `work_logs_report_${safeDate}.xlsx`;
+        })();
 
         const buffer =
             await workbook.xlsx.writeBuffer();
-
 
         res.setHeader(
             'Content-Type',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         );
 
-
         res.setHeader(
             'Content-Disposition',
             `attachment; filename="${filename}"`
         );
 
-
         res.setHeader(
             'Content-Length',
             buffer.length
         );
-
 
         console.log(
             'Excel generated successfully:',
@@ -3406,36 +2391,27 @@ exports.downloadWorkLogs = async (
             'bytes'
         );
 
-
-        return res.end(
-            buffer
+        console.log(
+            'Filename:',
+            filename
         );
 
+        return res.end(buffer);
 
     } catch (err) {
-
         console.error(
             'EXCEL DOWNLOAD ERROR:',
             err
         );
 
-
         if (!res.headersSent) {
-
             return res.status(500).json({
-
                 success: false,
-
                 message:
                     'Failed to generate work log report',
-
                 error:
                     err.message
-
             });
-
         }
-
     }
-
 };
